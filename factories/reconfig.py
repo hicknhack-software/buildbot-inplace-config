@@ -34,9 +34,9 @@ def addCheckoutStep(factory):
 	description="Checkout"
 	checkoutDict = { 'name': description, 'description': description, 'descriptionDone': description, 'hideStepIf': ShowStepIfSuccessful }
 
-	if repoType is "git":
+	if repoType == "git":
 		factory.addStep(git.Git(repoUrl, mode='incremental', submodules=True, **checkoutDict))
-	elif repoType is "svn":
+	elif repoType == "svn":
 		factory.addStep(svn.SVN(repoUrl, **checkoutDict))
 	else:
 		raise Exception("Repotype '" + str(repoType) + "' unknown.")
