@@ -12,7 +12,7 @@ class SlaveLoader:
 
 	@staticmethod
 	def load(bbConfig, path):
-		files = glob.glob( os.path.join(path, '*.slave') )
+		files = glob.glob( os.path.join(path, '*.yml') )
 		if not files:
 			raise Exception("No slaves found in '%s'!" % path)
 		
@@ -52,7 +52,7 @@ class ProjectLoader:
 
 	@staticmethod
 	def load(bbConfig, path, slaveNames):
-		files = glob.glob( os.path.join(path, '*.project') )
+		files = glob.glob( os.path.join(path, '*.yml') )
 		if not files:
 			raise Exception("No projects found in '%s'!" % path)
 		
