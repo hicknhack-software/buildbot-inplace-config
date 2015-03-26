@@ -89,17 +89,17 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 		yield self.runCommand(cmd)
 		yield defer.returnValue(cmd.results())
 
+	def _listDelimiter(self):
+		if shell == "cmd":
+			return ";"
+
+		return ":"
+
 	def _addConsumer(self):
-		self.consumer = EnvironmentParser(self.envDict)		
 
-		func = None
-		if self.initScript:
-			func = self.consumer._initEnvironment
-		else:
-			self.envDict.clear()
-			func = self.consumer._diffEnvironment
+		self.consumer = EnvironmentParser(self.envDict, self._listDelimiter())		
 
-		self.addLogObserver('envLog', logobserver.LineConsumerLogObserver(func))
+		self.addLogObserver('envLog', logobserver.LineConsumerLogObserver(self.consumer._retrieveEnvironment))
 
 	def _createNewShell(self):
 		if self.shell == "bash":

@@ -27,24 +27,30 @@ def triggerableName(projectName, platformName):
 
 class EnvironmentParser:
 
-	def __init__(self, environmentDict):
-		self.environmentDict = environmentDict
+	KnownLists = ["path"]
 
-	def _initEnvironment(self):
+	def __init__(self, environmentDict, listDelimiter=":"):
+		self.environmentDict = environmentDict
+		self.listDelimiter = listDelimiter
+
+	def _maybeAppend(self, key, value):
+		if key.lower() in EnvironmentParser.KnownLists:
+			old = self.environmentDict[key]
+			self.environmentDict[key] = "%s%s%s" % (old, self.listDelimiter, value)
+		else:
+			self.environmentDict[key] = value
+
+	def _parseLine(self, line):
+		if "=" in line:
+			key, value = line.split("=", 1)
+			if not key in self.environmentDict:
+				self.environmentDict[key] = value
+				return
+ 
+			self._maybeAppend(key, value)
+
+	def _retrieveEnvironment(self):
 		while True:
 			stream, line = yield
 			if stream == 'o':
-				if "=" in line:
-					key, value = line.split("=", 1)
-					self.environmentDict[key] = value
-
-	def _diffEnvironment(self):
-		while True:
-			stream, line = yield
-	        if stream == 'o':
-				if "=" in line:
-					key, value = line.split("=", 1)
-					if key in self.environmentDict:
-						self.environmentDict.remove(key)
-					else:
-						self.environmentDict[key] = value	
+				self._parseLine(line)

@@ -21,6 +21,7 @@ import unittest
 
 from tests.common.basetests import *
 from tests.common.configtests import *
+from tests.steps.basetests import *
 
 if __name__ == '__main__':
     unittest.main()
