@@ -176,9 +176,6 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 			self.master.reconfigServiceWithBuildbotConfig(newConfig)
 		else:
 			self.master.reconfig()
-		#except Exception, e:
-		#	from buildbot.status.results import FAILURE
-		#	return FAILURE
 
 		return master.MasterShellCommand.start(self)
 
@@ -237,7 +234,7 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 			self.bbConfig.addBuilder(
 				config.BuilderConfig(
 					name=builderName, 
-					slavenames=["example-slave"], #TODO: insert real slave name
+					slavenames=[s.name for s in self.bbConfig.slaveInfo if s.platform == platformName],
 					factory=EnvironmentAwareBuildFactory(self.bbConfig, self.projectConfig, profile, actions)
 				)
 			)
