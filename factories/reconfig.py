@@ -62,15 +62,20 @@ class EnvironmentAwareBuildFactory(factory.BuildFactory):
 			return "cmd", ".bat"
 		return "bash", ".sh"
 
-	def _getPrepareScript(self, setup, suffix):
-		return "~/Shared/prepareScripts/prepare%s" % suffix, str(setup) #TODO: hard-coded path
-
 	def _addEnvironmentInitSteps(self):
-		shell, suffix = self._getShellParams(self.profile)
+		shell, dotSuffix = self._getShellParams(self.profile)
 
 		for setup in self.profile.setup:
-			initScript, parameter = self._getPrepareScript(setup, suffix)
-			self.addStep(reconfig.RetrieveEnvironmentStep(self.dict, shell, initScript=initScript, initParameter=parameter))
+			initScript = "~/Shared/prepareScripts/%s%s" % (setup, dotSuffix)
+
+			desc = "Preparing %s" % setup
+			stepDict = {
+				'description': desc,
+				'name': desc,
+				'descriptionDone': desc
+			}
+
+			self.addStep(reconfig.RetrieveEnvironmentStep(self.dict, shell, initScript=initScript, **stepDict))
 
 	def _addConfiguredBuildSteps(self):
 		for action in self.actions:

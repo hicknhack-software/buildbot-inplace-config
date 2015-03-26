@@ -72,7 +72,7 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 		self.shell = shell
 
 		kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-		buildstep.BuildStep.__init__(self, name="Prepare Environment", hideStepIf=ShowStepIfSuccessful, **kwargs)
+		buildstep.BuildStep.__init__(self, hideStepIf=ShowStepIfSuccessful, **kwargs)
 
 	@defer.inlineCallbacks
 	def run(self):
