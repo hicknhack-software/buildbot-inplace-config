@@ -36,7 +36,7 @@ class EnvironmentParser:
 	def _maybeAppend(self, key, value):
 		if key.lower() in EnvironmentParser.KnownLists:
 			old = self.environmentDict[key]
-			self.environmentDict[key] = "%s%s%s" % (old, self.listDelimiter, value)
+			self.environmentDict[key] = self.listDelimiter.join([old, value])
 		else:
 			self.environmentDict[key] = value
 
