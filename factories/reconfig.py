@@ -48,6 +48,7 @@ class EnvironmentAwareBuildFactory(factory.BuildFactory):
 
 		factory.BuildFactory.__init__(self, [])
 
+		self.bbConfig = bbConfig
 		self.projectConfig = projectConfig
 		self.profile = profile
 		self.actions = actions
@@ -66,8 +67,6 @@ class EnvironmentAwareBuildFactory(factory.BuildFactory):
 		shell, dotSuffix = self._getShellParams(self.profile)
 
 		for setup in self.profile.setup:
-			initScript = "~/Shared/prepareScripts/%s%s" % (setup, dotSuffix)
-
 			desc = "Preparing %s" % setup
 			stepDict = {
 				'description': desc,
@@ -75,7 +74,7 @@ class EnvironmentAwareBuildFactory(factory.BuildFactory):
 				'descriptionDone': desc
 			}
 
-			self.addStep(reconfig.RetrieveEnvironmentStep(self.dict, shell, initScript=initScript, **stepDict))
+			self.addStep(reconfig.RetrieveEnvironmentStep(self.bbConfig, self.dict, initScript=(setup + dotSuffix), **stepDict))
 
 	def _addConfiguredBuildSteps(self):
 		for action in self.actions:

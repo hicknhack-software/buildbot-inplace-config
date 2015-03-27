@@ -61,15 +61,13 @@ class EnvironmentAwareShellSequence(shellsequence.ShellSequence):
 '''A Step that retrieves the environment after a command.'''
 class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 
-	def __init__(self, envDict, shell, initCommand=None, initScript=None, initParameter="", **kwargs):
+	def __init__(self, bbConfig, envDict, initScript=None, **kwargs):
 
 		commands = []
 
+		self.bbConfig = bbConfig
 		self.envDict = envDict
-		self.initCommand = initCommand
 		self.initScript = initScript
-		self.initParameter = initParameter
-		self.shell = shell
 
 		kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
 		buildstep.BuildStep.__init__(self, hideStepIf=ShowStepIfSuccessful, **kwargs)
@@ -84,13 +82,17 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 				], 
 				stdioLogName="envLog"
 			)
+
 		self._addConsumer()
 
 		yield self.runCommand(cmd)
 		yield defer.returnValue(cmd.results())
 
 	def _listDelimiter(self):
-		if shell == "cmd":
+		slaveName = self.getSlaveName()
+		slaveInfo = self.bbConfig.retrieveSlaveInformation(slaveName)
+
+		if slaveInfo.shell == "cmd":
 			return ";"
 
 		return ":"
@@ -98,27 +100,32 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 	def _addConsumer(self):
 
 		self.consumer = EnvironmentParser(self.envDict, self._listDelimiter())		
-
 		self.addLogObserver('envLog', logobserver.LineConsumerLogObserver(self.consumer._retrieveEnvironment))
 
 	def _createNewShell(self):
-		if self.shell == "bash":
-			return [self.shell, '-c']
+		slaveName = self.getSlaveName()
+		slaveInfo = self.bbConfig.retrieveSlaveInformation(slaveName)
+
+		if slaveInfo.shell == "bash":
+			return [slaveInfo.shell, '-c']
 		else:
-			return [self.shell, '/c']
+			return [slaveInfo.shell, '/c']
 
 	def _createSubcommand(self):
+		slaveName = self.getSlaveName()
+		slaveInfo = self.bbConfig.retrieveSlaveInformation(slaveName)
+
 		subCommand = []
-		#add an init script to the command
-		if self.initScript:
-			if self.shell == "bash":
-				subCommand.append('chmod +x %s;' % self.initScript)
+
+		#make executable
+		if self.initScript and slaveInfo.shell == 'bash': 
+			subCommand.append('chmod +x %s%s;' % (slaveInfo.setupDir, self.initScript))
 			
-			subCommand.append('. %s %s;' % (self.initScript, self.initParameter) )	#TODO: adapt to windows slave
-		
-		#add an init command to the command
-		if self.initCommand:
-			subCommand.append('%s;' % self.initCommand)
+		#Source environment
+		if self.initScript: 
+			subCommand.append('. %s%s;' % (slaveInfo.setupDir, self.initScript))
+
+		#TODO: adapt source command to windows slaves
 
 		subCommand.append('env')
 
