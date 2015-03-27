@@ -166,6 +166,9 @@ class RetrieveProjectConfigurationStep(buildstep.ShellMixin, buildstep.BuildStep
 	        if stream == 'o':
 	            self.configLog.append(line + "\n")
 
+class ProfileNotFulfilledException(Exception):
+	pass
+
 ''' A Step that reconfigures the Buildmaster.'''
 class ReconfigBuildmasterStep(master.MasterShellCommand):
 
@@ -179,9 +182,13 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 		master.MasterShellCommand.__init__(self, command=["echo", "Reconfigured Master"], hideStepIf=ShowStepIfSuccessful, **kwargs)
 
 	def start(self):
-		self._addBuilders()
+		try:
+			self._addBuilders()
+		except ProfileNotFulfilledException as e:
+			from buildbot.status.results import FAILURE
+			print "Failing: %s" % str(e)
+			return FAILURE
 
-		#try: 
 		if self.updateFromProject:
 			newConfig  = self._createMasterConfig()
 			self.master.reconfigServiceWithBuildbotConfig(newConfig)
@@ -224,31 +231,46 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 
 		return masterConfig
 
+	def _getSlavesNamesForProfile(self, profile):
+
+		def setupSatisfied(requested, existing):
+			return set(requested).issubset(set(existing))			
+
+		platformName = profile.platform.name
+		slaveInfos = filter( lambda s : s.platform == platformName and setupSatisfied(profile.setup, s.setups), self.bbConfig.slaveInfo )
+
+		return map(lambda s : s.name, slaveInfos)
+
 	def _addBuilders(self):
 		from ..factories.reconfig import EnvironmentAwareBuildFactory # avoid cyclic import
 
 		builderNamesByPlatform = {}
 
 		for profile in self.projectConfig.profiles:
+			applicableSlaves = self._getSlavesNamesForProfile(profile)
+			if not applicableSlaves:
+				continue
+
 			#update associations between platform and builders
 			platformName = profile.platform.name
 			
 			if platformName not in builderNamesByPlatform:
 				builderNamesByPlatform[platformName] = []
 
-			builderName = self.projectName + "_" + platformName + "_" + profile.name
+			builderName = "_".join([self.projectName, platformName, profile.name])
 			builderNamesByPlatform[platformName].append(builderName)
-
-			actions = self.projectConfig.commands(profile.commands)
 
 			# create builder
 			self.bbConfig.addBuilder(
 				config.BuilderConfig(
 					name=builderName, 
-					slavenames=[s.name for s in self.bbConfig.slaveInfo if s.platform == platformName],
-					factory=EnvironmentAwareBuildFactory(self.bbConfig, self.projectConfig, profile, actions)
+					slavenames=applicableSlaves,
+					factory=EnvironmentAwareBuildFactory(self.bbConfig, self.projectConfig, profile)
 				)
 			)
+
+		if not builderNamesByPlatform:
+			raise ProfileNotFulfilledException("No slaves fulfil the profiles of this project!")
 
 		for platform in self.bbConfig.availablePlatforms():
 			if platform not in builderNamesByPlatform:

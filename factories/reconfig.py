@@ -44,14 +44,13 @@ def addCheckoutStep(factory):
 '''A Factory that create environment-aware build steps from a configuration.'''
 class EnvironmentAwareBuildFactory(factory.BuildFactory):
 
-	def __init__(self, bbConfig, projectConfig, profile, actions):
+	def __init__(self, bbConfig, projectConfig, profile):
 
 		factory.BuildFactory.__init__(self, [])
 
 		self.bbConfig = bbConfig
 		self.projectConfig = projectConfig
 		self.profile = profile
-		self.actions = actions
 
 		self.dict = {}
 		self._addEnvironmentInitSteps()
@@ -71,7 +70,8 @@ class EnvironmentAwareBuildFactory(factory.BuildFactory):
 			self.addStep(reconfig.RetrieveEnvironmentStep(self.bbConfig, self.dict, setup, **stepDict))
 
 	def _addConfiguredBuildSteps(self):
-		for action in self.actions:
+		actions = self.projectConfig.commands(self.profile.commands)
+		for action in actions:
 			actionDict = {
 				'name': action.name,
 				'description': action.name,
