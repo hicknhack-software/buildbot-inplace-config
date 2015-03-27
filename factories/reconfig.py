@@ -58,14 +58,8 @@ class EnvironmentAwareBuildFactory(factory.BuildFactory):
 		addCheckoutStep(self)
 		self._addConfiguredBuildSteps()
 
-	def _getShellParams(self, profile):
-		if "Windows" in profile.platform.name:
-			return "cmd", ".bat"
-		return "bash", ".sh"
-
 	def _addEnvironmentInitSteps(self):
-		shell, dotSuffix = self._getShellParams(self.profile)
-
+		
 		for setup in self.profile.setup:
 			desc = "Preparing %s" % setup
 			stepDict = {
@@ -74,16 +68,22 @@ class EnvironmentAwareBuildFactory(factory.BuildFactory):
 				'descriptionDone': desc
 			}
 
-			self.addStep(reconfig.RetrieveEnvironmentStep(self.bbConfig, self.dict, initScript=(setup + dotSuffix), **stepDict))
+			self.addStep(reconfig.RetrieveEnvironmentStep(self.bbConfig, self.dict, setup, **stepDict))
 
 	def _addConfiguredBuildSteps(self):
 		for action in self.actions:
+			actionDict = {
+				'name': action.name,
+				'description': action.name,
+				'descriptionDone': action.name
+			}
+
 			assert action.commands, "No commands found for %s:%s" % (self.profile.name, action.name)
 			if len(action.commands) == 1:
-				self.addStep(reconfig.EnvironmentAwareStep(self.dict, action.commands[0], name=action.name, description=action.name, descriptionDone=action.name))
+				self.addStep(reconfig.EnvironmentAwareStep(self.dict, action.commands[0], **actionDict))
 			else:
 				cmds = [c for c in action.commands]
-				self.addStep(reconfig.EnvironmentAwareShellSequence(self.dict, cmds, name=action.name, description=action.name, descriptionDone=action.name))			
+				self.addStep(reconfig.EnvironmentAwareShellSequence(self.dict, cmds, **actionDict))			
 
 ''' A factory that provides Steps to checkout a repository, reads its configuration and create and trigger builds accordingly.'''
 class BuildTriggerFactory(factory.BuildFactory):
@@ -106,7 +106,7 @@ class BuildTriggerFactory(factory.BuildFactory):
 		addCheckoutStep(self)
 		self._addReconfigurationSteps(projectName)
 
-	def triggerableNames(self):
+	def _triggerableNames(self):
 		names = []
 
 		for platform in self.buildBotConfig.availablePlatforms():
@@ -121,6 +121,6 @@ class BuildTriggerFactory(factory.BuildFactory):
 		# Checkout - Parse Config - Reconfigure with new Config - Trigger Builds - Load old Config
 		self.addStep(reconfig.RetrieveProjectConfigurationStep(projectConf, haltOnFailure=True))
 		self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, projectConf, True, haltOnFailure=True, **BuildTriggerFactory.reconfigDict))
-		self.addStep(trigger.Trigger(schedulerNames=self.triggerableNames(), updateSourceStamp=True, waitForFinish=True, **BuildTriggerFactory.triggerDict))
+		self.addStep(trigger.Trigger(schedulerNames=self._triggerableNames(), updateSourceStamp=True, waitForFinish=True, **BuildTriggerFactory.triggerDict))
 		self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, projectConf, False, **BuildTriggerFactory.resetDict))		
 

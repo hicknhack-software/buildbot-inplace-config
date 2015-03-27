@@ -61,13 +61,18 @@ class EnvironmentAwareShellSequence(shellsequence.ShellSequence):
 '''A Step that retrieves the environment after a command.'''
 class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 
-	def __init__(self, bbConfig, envDict, initScript=None, **kwargs):
+	Delimiters = {
+		"cmd": ";",
+		"bash": ":"
+	}
+
+	def __init__(self, bbConfig, envDict, setup, **kwargs):
 
 		commands = []
 
 		self.bbConfig = bbConfig
 		self.envDict = envDict
-		self.initScript = initScript
+		self.setup = setup
 
 		kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
 		buildstep.BuildStep.__init__(self, hideStepIf=ShowStepIfSuccessful, **kwargs)
@@ -77,59 +82,58 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 
 		cmd = yield self.makeRemoteShellCommand(
 				command=[
-					self._createNewShell(), 
+					self._addCreateShell(), 
 					self._createSubcommand()
 				], 
 				stdioLogName="envLog"
 			)
 
-		self._addConsumer()
+		self._addRetrieveEnvironment()
 
 		yield self.runCommand(cmd)
 		yield defer.returnValue(cmd.results())
 
-	def _listDelimiter(self):
-		slaveName = self.getSlaveName()
-		slaveInfo = self.bbConfig.retrieveSlaveInformation(slaveName)
+	#logobserver
+	def _addRetrieveEnvironment(self):
+		slaveInfo = self.bbConfig.retrieveSlaveInformation(self.getSlaveName())
 
-		if slaveInfo.shell == "cmd":
-			return ";"
-
-		return ":"
-
-	def _addConsumer(self):
-
-		self.consumer = EnvironmentParser(self.envDict, self._listDelimiter())		
+		self.consumer = EnvironmentParser(self.envDict, RetrieveEnvironmentStep.Delimiters[slaveInfo.shell])		
 		self.addLogObserver('envLog', logobserver.LineConsumerLogObserver(self.consumer._retrieveEnvironment))
 
-	def _createNewShell(self):
-		slaveName = self.getSlaveName()
-		slaveInfo = self.bbConfig.retrieveSlaveInformation(slaveName)
+	#creates a command that start a new shell
+	def _addCreateShell(self):
+		slaveInfo = self.bbConfig.retrieveSlaveInformation(self.getSlaveName())
 
 		if slaveInfo.shell == "bash":
 			return [slaveInfo.shell, '-c']
 		else:
 			return [slaveInfo.shell, '/c']
 
+	#creates commands to make sure the setup script is executable and to source the environment
 	def _createSubcommand(self):
-		slaveName = self.getSlaveName()
-		slaveInfo = self.bbConfig.retrieveSlaveInformation(slaveName)
+		slaveInfo = self.bbConfig.retrieveSlaveInformation(self.getSlaveName())
 
 		subCommand = []
 
-		#make executable
-		if self.initScript and slaveInfo.shell == 'bash': 
-			subCommand.append('chmod +x %s%s;' % (slaveInfo.setupDir, self.initScript))
-			
-		#Source environment
-		if self.initScript: 
-			subCommand.append('. %s%s;' % (slaveInfo.setupDir, self.initScript))
+		setupScript = self._getSetupScript()
 
-		#TODO: adapt source command to windows slaves
+		if self.setup and slaveInfo.shell == 'bash': 
+			subCommand.append('chmod +x %s;' % setupScript)
+		subCommand.append('. %s;' % setupScript) 
 
 		subCommand.append('env')
 
 		return "".join(subCommand)
+
+	#helpers
+	def _getSetupScript(self):
+		slaveInfo = self.bbConfig.retrieveSlaveInformation(self.getSlaveName())
+		suffix = ".sh"
+
+		if "Windows" in slaveInfo.platform:
+			suffix = ".bat"
+
+		return "".join([slaveInfo.setupDir, self.setup, suffix])
 
 '''A Step that parses a project configuration (.buildbot.yml).'''
 class RetrieveProjectConfigurationStep(buildstep.ShellMixin, buildstep.BuildStep):
