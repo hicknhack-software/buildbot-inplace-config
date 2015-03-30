@@ -186,7 +186,7 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 			self._addBuilders()
 		except ProfileNotFulfilledException as e:
 			from buildbot.status.results import FAILURE
-            self.addCompleteLog("errorlog", "Failing: %s" % str(e))
+			self.addCompleteLog("errorlog", "Failing: %s" % str(e))
 			return FAILURE
 
 		if self.updateFromProject:
