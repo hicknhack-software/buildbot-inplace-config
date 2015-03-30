@@ -75,7 +75,7 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 		self.setup = setup
 
 		kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-		buildstep.BuildStep.__init__(self, hideStepIf=ShowStepIfSuccessful, **kwargs)
+		buildstep.BuildStep.__init__(self, **kwargs)
 
 	@defer.inlineCallbacks
 	def run(self):
@@ -186,7 +186,7 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 			self._addBuilders()
 		except ProfileNotFulfilledException as e:
 			from buildbot.status.results import FAILURE
-			print "Failing: %s" % str(e)
+            self.addCompleteLog("errorlog", "Failing: %s" % str(e))
 			return FAILURE
 
 		if self.updateFromProject:
