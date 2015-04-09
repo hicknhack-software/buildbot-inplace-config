@@ -119,7 +119,9 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 
 		if self.setup and slaveInfo.shell == 'bash': 
 			subCommand.append('chmod +x %s;' % setupScript)
-		subCommand.append('. %s;' % setupScript) 
+			subCommand.append('. %s;' % setupScript)
+		elif self.setup and slaveInfo.shell == 'cmd':
+			subCommand.append(setupScript)
 
 		subCommand.append('env')
 
