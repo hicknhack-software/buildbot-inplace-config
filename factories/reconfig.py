@@ -101,38 +101,38 @@ class EnvironmentAwareBuildFactory(factory.BuildFactory):
 
 ''' A factory that provides Steps to checkout a repository, reads its configuration and create and trigger builds accordingly.'''
 class BuildTriggerFactory(factory.BuildFactory):
-	reconfigDesc = 'Registering Builds'
-	resetDesc = 'Resetting Configuration'
+    reconfigDesc = 'Registering Builds'
+    resetDesc = 'Resetting Configuration'
 
-	reconfigDict = {'name': reconfigDesc, 'description': reconfigDesc, 'descriptionDone': reconfigDesc}
-	resetDict = {'name': resetDesc, 'description': resetDesc, 'descriptionDone': resetDesc}
+    reconfigDict = {'name': reconfigDesc, 'description': reconfigDesc, 'descriptionDone': reconfigDesc}
+    resetDict = {'name': resetDesc, 'description': resetDesc, 'descriptionDone': resetDesc}
 
-	triggerDesc = 'Triggering Builds'
-	triggerDict = {'name': triggerDesc, 'description': triggerDesc, 'descriptionDone': triggerDesc}
+    triggerDesc = 'Triggering Builds'
+    triggerDict = {'name': triggerDesc, 'description': triggerDesc, 'descriptionDone': triggerDesc}
 
-	def __init__(self, buildBotConfig, projectConfig):
+    def __init__(self, buildBotConfig, projectConfig):
 
-		factory.BuildFactory.__init__(self, [])
+        factory.BuildFactory.__init__(self, [])
 
-		self.buildBotConfig = buildBotConfig
-		self.projectConfig = projectConfig
+        self.buildBotConfig = buildBotConfig
+        self.projectConfig = projectConfig
 
-		addCheckoutStep(self)
-		self._addReconfigurationSteps(projectName)
+        addCheckoutStep(self)
+        self._addReconfigurationSteps(projectConfig.projectName)
 
-	def _triggerableNames(self):
-		names = []
+    def _triggerableNames(self):
+        names = []
 
-		for platform in self.buildBotConfig.availablePlatforms():
-			names.append(triggerableName(self.projectConfig.projectName, platform))
+        for platform in self.buildBotConfig.availablePlatforms():
+            names.append(triggerableName(self.projectConfig.projectName, platform))
 
-		return names
+        return names
 
-	def _addReconfigurationSteps(self, projectName):
+    def _addReconfigurationSteps(self, projectName):
 
-		# Checkout - Parse Config - Reconfigure with new Config - Trigger Builds - Load old Config
-		self.addStep(reconfig.RetrieveProjectConfigurationStep(self.projectConfig, haltOnFailure=True))
-		self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, self.projectConfig, True, haltOnFailure=True, **BuildTriggerFactory.reconfigDict))
-		self.addStep(trigger.Trigger(schedulerNames=self._triggerableNames(), updateSourceStamp=True, waitForFinish=True, **BuildTriggerFactory.triggerDict))
-		self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, self.projectConfig, False, **BuildTriggerFactory.resetDict))		
+        # Checkout - Parse Config - Reconfigure with new Config - Trigger Builds - Load old Config
+        self.addStep(reconfig.RetrieveProjectConfigurationStep(self.projectConfig, haltOnFailure=True))
+        self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, self.projectConfig, True, haltOnFailure=True, **BuildTriggerFactory.reconfigDict))
+        self.addStep(trigger.Trigger(schedulerNames=self._triggerableNames(), updateSourceStamp=True, waitForFinish=True, **BuildTriggerFactory.triggerDict))
+        self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, self.projectConfig, False, **BuildTriggerFactory.resetDict))	
 
