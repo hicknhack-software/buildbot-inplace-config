@@ -17,6 +17,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 
+import re
+
 from buildbot.process import factory
 from buildbot.steps import trigger, shellsequence
 from buildbot.steps.source import git
@@ -27,19 +29,31 @@ from ..steps.base import ShowStepIfSuccessful, triggerableName
 
 reload(reconfig)
 
+def infuseCredentials(gitUrl, user, password):
+	m = re.search("(://)", gitUrl)
+	idx = m.end()
+	if idx >= 0:
+		credString = "%s:%s@" % (user, password)
+		return (gitUrl[:idx] + credString + gitUrl[idx:])
+
+	raise Exception("Url Format not supported: %s" % gitUrl)
+
 def addCheckoutStep(factory):
 	repoUrl = factory.projectConfig.repoUrl
 	repoType = factory.projectConfig.repoType
+	repoUser = factory.projectConfig.repoUser
+	repoPassword = factory.projectConfig.repoPassword
 
 	description="Checkout"
 	checkoutDict = { 'name': description, 'description': description, 'descriptionDone': description, 'hideStepIf': ShowStepIfSuccessful }
 
 	if repoType == "git":
-		factory.addStep(git.Git(repoUrl, mode='incremental', submodules=True, **checkoutDict))
-	elif repoType == "svn":
-		factory.addStep(svn.SVN(repoUrl, **checkoutDict))
+		modifiedRepoUrl = repoUrl
+		if repoUser and repoPassword:
+			modifiedRepoUrl = infuseCredentials(modifiedRepoUrl, repoUser, repoPassword)
+		factory.addStep(git.Git(modifiedRepoUrl, mode='incremental', submodules=True, **checkoutDict))
 	else:
-		raise Exception("Repotype '" + str(repoType) + "' unknown.")
+		raise Exception("Repotype '" + str(repoType) + "' not supported.")
 
 '''A Factory that create environment-aware build steps from a configuration.'''
 class EnvironmentAwareBuildFactory(factory.BuildFactory):
@@ -96,12 +110,12 @@ class BuildTriggerFactory(factory.BuildFactory):
 	triggerDesc = 'Triggering Builds'
 	triggerDict = {'name': triggerDesc, 'description': triggerDesc, 'descriptionDone': triggerDesc}
 
-	def __init__(self, buildBotConfig, projectName, repoUrl, repoType):
+	def __init__(self, buildBotConfig, projectConfig):
 
 		factory.BuildFactory.__init__(self, [])
 
 		self.buildBotConfig = buildBotConfig
-		self.projectConfig = ProjectConfiguration(projectName, repoUrl, repoType)
+		self.projectConfig = projectConfig
 
 		addCheckoutStep(self)
 		self._addReconfigurationSteps(projectName)
@@ -116,11 +130,9 @@ class BuildTriggerFactory(factory.BuildFactory):
 
 	def _addReconfigurationSteps(self, projectName):
 
-		projectConf = self.projectConfig
-
 		# Checkout - Parse Config - Reconfigure with new Config - Trigger Builds - Load old Config
-		self.addStep(reconfig.RetrieveProjectConfigurationStep(projectConf, haltOnFailure=True))
-		self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, projectConf, True, haltOnFailure=True, **BuildTriggerFactory.reconfigDict))
+		self.addStep(reconfig.RetrieveProjectConfigurationStep(self.projectConfig, haltOnFailure=True))
+		self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, self.projectConfig, True, haltOnFailure=True, **BuildTriggerFactory.reconfigDict))
 		self.addStep(trigger.Trigger(schedulerNames=self._triggerableNames(), updateSourceStamp=True, waitForFinish=True, **BuildTriggerFactory.triggerDict))
-		self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, projectConf, False, **BuildTriggerFactory.resetDict))		
+		self.addStep(reconfig.ReconfigBuildmasterStep(self.buildBotConfig, self.projectConfig, False, **BuildTriggerFactory.resetDict))		
 

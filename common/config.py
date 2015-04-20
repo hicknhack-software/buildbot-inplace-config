@@ -74,10 +74,12 @@ class ProjectConfigurationParser:
 
 class ProjectConfiguration:
 
-	def __init__(self, name, repoUrl, repoType):
+	def __init__(self, name, repoUrl, repoType, repoUser, repoPassword):
 		self.projectName = name
 		self.repoUrl = repoUrl
 		self.repoType = repoType
+		self.repoUser = repoUser
+		self.repoPassword = repoPassword
 		self.profiles = set()
 		self.platforms = set()
 		self.commandKeys = set()

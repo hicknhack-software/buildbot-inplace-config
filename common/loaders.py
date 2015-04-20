@@ -25,7 +25,7 @@ from buildbot.master import config as masterConfig
 from buildbot.plugins import buildslave, util, schedulers
 
 from ..factories import reconfig
-from ..common.config import BuildbotConfigurationWrapper, SlaveInformation
+from ..common.config import BuildbotConfigurationWrapper, SlaveInformation, ProjectConfiguration
 
 class SlaveLoader:
 
@@ -41,9 +41,9 @@ class SlaveLoader:
 			y = yaml.safe_load(open(slaveFile).read())
 			
 			bbConfig.registerSlaveInformation(SlaveInformation(**y))
-			bbConfig.addSlave(buildslave.BuildSlave(y["name"], y["password"]))
+			bbConfig.addSlave(buildslave.BuildSlave(y['name'], y['password']))
 
-			slaveNames.append(y["name"])
+			slaveNames.append(y['name'])
 
 		return slaveNames
     	
@@ -52,20 +52,18 @@ class ProjectLoader:
 	@staticmethod
 	def _createForceScheduler(projectName):
 		return schedulers.ForceScheduler(
-				name="Force_%s_Builds" % projectName, 
-				builderNames=["%s_Builder" % projectName]
+				name='Force_%s_Builds' % projectName, 
+				builderNames=['%s_Builder' % projectName]
 			)
 
 	@staticmethod
-	def _createTriggerBuilderConfig(bbConfig, slaveNames, **projectInformation):
+	def _createTriggerBuilderConfig(bbConfig, slaveNames, projectConfig):
 		return masterConfig.BuilderConfig(
-				name="%s_Builder" % projectInformation["name"],
+				name='%s_Builder' % projectInformation['name'],
 				slavenames=slaveNames,
 				factory=reconfig.BuildTriggerFactory(
 						bbConfig,
-						projectInformation["name"],
-						projectInformation["repoUrl"],
-						projectInformation["repoType"]
+						projectConfig
 					)
 			)
 
@@ -73,20 +71,26 @@ class ProjectLoader:
 	def load(bbConfig, path, slaveNames):
 		files = glob.glob( os.path.join(path, '*.yml') )
 		if not files:
-			raise Exception("No projects found in '%s'!" % path)
+			raise Exception('No projects found in %s!' % path)
 		
-		bbConfig.addBuilder(masterConfig.BuilderConfig(name="DummyBuilder", slavenames=slaveNames, factory=util.BuildFactory()))
-		bbConfig.addScheduler(schedulers.ForceScheduler(name="Force_Dummy_Build", builderNames=["DummyBuilder"]))
+		bbConfig.addBuilder(masterConfig.BuilderConfig(name='DummyBuilder', slavenames=slaveNames, factory=util.BuildFactory()))
+		bbConfig.addScheduler(schedulers.ForceScheduler(name='Force_Dummy_Build', builderNames=['DummyBuilder']))
 
 		for project in files:
 			y = yaml.safe_load(open(project).read())
 
-			projectInformation = {
-				'name': y["name"],
-				'repoUrl': y["repoUrl"],
-				'repoType': y["repoType"],
-			}
+			try:
+				projectConfig = ProjectConfiguration( 
+					projectInformation['name'],
+					projectInformation['repoUrl'],
+					projectInformation['repoType'],
+					projectInformation['repoUser'],
+					projectInformation['repoPassword'] 
+				)
 
-			bbConfig.addBuilder(ProjectLoader._createTriggerBuilderConfig(bbConfig, slaveNames, **projectInformation))
-			bbConfig.addScheduler(ProjectLoader._createForceScheduler(projectInformation["name"]))
+				bbConfig.addBuilder(ProjectLoader._createTriggerBuilderConfig(bbConfig, slaveNames, projectConfig))
+				bbConfig.addScheduler(ProjectLoader._createForceScheduler(projectConfig.projectName))
+
+			except:
+				raise Exception("Malformed project description!")
 			
