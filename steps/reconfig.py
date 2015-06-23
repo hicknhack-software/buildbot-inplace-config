@@ -1,15 +1,15 @@
-''' Twofold-Qt
+''' Buildbot inplace config
 (C) Copyright 2015 HicknHack Software GmbH
- 
+
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
- 
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
- 
+
 http://www.apache.org/licenses/LICENSE-2.0
- 
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ from buildbot.schedulers import triggerable
 
 from base import EnvironmentParser, ShowStepIfSuccessful, triggerableName
 from ..common.config import ProjectConfigurationParser
-	
+
 '''A Step that executes a command in a given environment.'''
 class EnvironmentAwareStep(buildstep.ShellMixin, buildstep.BuildStep):
 
@@ -36,7 +36,7 @@ class EnvironmentAwareStep(buildstep.ShellMixin, buildstep.BuildStep):
 
 		kwargs['env'] = envDict
 		kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-		buildstep.BuildStep.__init__(self, **kwargs)	
+		buildstep.BuildStep.__init__(self, **kwargs)
 
 	@defer.inlineCallbacks
 	def run(self):
@@ -82,9 +82,9 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 
 		cmd = yield self.makeRemoteShellCommand(
 				command=[
-					self._addCreateShell(), 
+					self._addCreateShell(),
 					self._createSubcommand()
-				], 
+				],
 				stdioLogName="envLog"
 			)
 
@@ -97,7 +97,7 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 	def _addRetrieveEnvironment(self):
 		slaveInfo = self.bbConfig.retrieveSlaveInformation(self.getSlaveName())
 
-		self.consumer = EnvironmentParser(self.envDict, RetrieveEnvironmentStep.Delimiters[slaveInfo.shell])		
+		self.consumer = EnvironmentParser(self.envDict, RetrieveEnvironmentStep.Delimiters[slaveInfo.shell])
 		self.addLogObserver('envLog', logobserver.LineConsumerLogObserver(self.consumer._retrieveEnvironment))
 
 	#creates a command that start a new shell
@@ -117,7 +117,7 @@ class RetrieveEnvironmentStep(buildstep.ShellMixin, buildstep.BuildStep):
 
 		setupScript = self._getSetupScript()
 
-		if self.setup and slaveInfo.shell == 'bash': 
+		if self.setup and slaveInfo.shell == 'bash':
 			subCommand.append('chmod +x %s;' % setupScript)
 			subCommand.append('. %s;' % setupScript)
 		elif self.setup and slaveInfo.shell == 'cmd':
@@ -145,7 +145,7 @@ class RetrieveProjectConfigurationStep(buildstep.ShellMixin, buildstep.BuildStep
 		self.projectConfig = projectConfig
 		kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
 		buildstep.BuildStep.__init__(self, name="Update Configuration", hideStepIf=ShowStepIfSuccessful, **kwargs)
-    
+
 	@defer.inlineCallbacks
 	def run(self):
 		self._sync_addlog_deferreds = []
@@ -236,7 +236,7 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 	def _getSlavesNamesForProfile(self, profile):
 
 		def setupSatisfied(requested, existing):
-			return set(requested).issubset(set(existing))			
+			return set(requested).issubset(set(existing))
 
 		platformName = profile.platform.name
 		slaveInfos = filter( lambda s : s.platform == platformName and setupSatisfied(profile.setup, s.setups), self.bbConfig.slaveInfo )
@@ -255,7 +255,7 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 
 			#update associations between platform and builders
 			platformName = profile.platform.name
-			
+
 			if platformName not in builderNamesByPlatform:
 				builderNamesByPlatform[platformName] = []
 
@@ -265,7 +265,7 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 			# create builder
 			self.bbConfig.addBuilder(
 				config.BuilderConfig(
-					name=builderName, 
+					name=builderName,
 					slavenames=applicableSlaves,
 					factory=EnvironmentAwareBuildFactory(self.bbConfig, self.projectConfig, profile)
 				)
@@ -285,4 +285,4 @@ class ReconfigBuildmasterStep(master.MasterShellCommand):
 
 	def _addTriggerable(self, platformName, builderNames):
 		name = triggerableName(self.projectName, platformName)
-		self.bbConfig.addScheduler(triggerable.Triggerable(name = name, builderNames=builderNames))		
+		self.bbConfig.addScheduler(triggerable.Triggerable(name = name, builderNames=builderNames))

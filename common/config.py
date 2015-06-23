@@ -1,15 +1,15 @@
-''' Twofold-Qt
+''' Buildbot inplace config
 (C) Copyright 2015 HicknHack Software GmbH
- 
+
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
- 
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
- 
+
 http://www.apache.org/licenses/LICENSE-2.0
- 
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -90,8 +90,8 @@ class ProjectConfiguration:
 		for profile in self.profiles:
 			for x in profile.dependencies:
 				if profile.platform is name:
-					s.add(x) 
-					
+					s.add(x)
+
 		return sorted(s, key=operator.attrgetter('name'))
 
 	def commands(self, commandKey):
@@ -100,8 +100,8 @@ class ProjectConfiguration:
 	def _parseProfiles(self, config):
 		self.profiles.clear()
 		self.platforms.clear()
-		self.commandKeys.clear()		
-		
+		self.commandKeys.clear()
+
 		if isinstance(config, dict):
 			for profile in config["profiles"]:
 				prof = ProjectConfigurationParser.profileFromYamlString(profile)
@@ -162,7 +162,7 @@ class BuildbotConfigurationWrapper:
 		self.config = dict()
 		self.config['db'] = {'db_url' : "sqlite:///state.sqlite"}
 		self.config['status'] = []
-		self.config['www'] = dict(port=8020, plugins=dict(waterfall_view={}, console_view={})) 
+		self.config['www'] = dict(port=8020, plugins=dict(waterfall_view={}, console_view={}))
 		self.slaveInfo = []
 
 	''' These methods are called from master.cfg '''
@@ -200,7 +200,7 @@ class BuildbotConfigurationWrapper:
 			platforms.add(s.platform)
 
 		return platforms
-	
+
 	def setConnection(self, url, port):
 		self.config['buildbotURL'] = url
 		self.config['protocols'] = {'pb': {'port': port}}
@@ -226,10 +226,8 @@ class BuildbotConfigurationWrapper:
 
 	def _maybeRemoveNamedEntity(self, key, name):
 		if key not in self.config:
-			return 
+			return
 
 		for e in self.config[key]:
 			if e.name == name:
 				self.config[key].remove(e)
-
-
