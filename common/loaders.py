@@ -80,11 +80,11 @@ class ProjectLoader:
 			y = yaml.safe_load(open(project).read())
 
 			projectConfig = ProjectConfiguration(
-				y['name'],
-				y['repoUrl'],
-				y['repoType'],
-				y['repoUser'],
-				y['repoPassword']
+				name = y['name'],
+				repoUrl = y['repoUrl'],
+				repoType = y['repoType'],
+				repoUser = y.get('repoUser'),
+				repoPassword = y.get('repoPassword')
 			)
 
 			bbConfig.addBuilder(ProjectLoader._createTriggerBuilderConfig(bbConfig, slaveNames, projectConfig))

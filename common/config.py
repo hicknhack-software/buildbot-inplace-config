@@ -74,7 +74,7 @@ class ProjectConfigurationParser:
 
 class ProjectConfiguration:
 
-	def __init__(self, name, repoUrl, repoType, repoUser, repoPassword):
+	def __init__(self, name, repoUrl, repoType = 'git', repoUser = None, repoPassword = None):
 		self.projectName = name
 		self.repoUrl = repoUrl
 		self.repoType = repoType
