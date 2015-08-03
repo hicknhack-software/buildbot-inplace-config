@@ -1,4 +1,4 @@
-''' Buildbot inplace config
+""" Buildbot inplace config
 (C) Copyright 2015 HicknHack Software GmbH
 
 The original code can be found at:
@@ -15,13 +15,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
+from buildbot.status.results import SUCCESS
 
-import unittest
-
-from tests.common.basetests import *
-from tests.common.configtests import *
-from tests.steps.basetests import *
-
-if __name__ == '__main__':
-	unittest.main()
+OVERRIDE_HIDE_IF = False
+ShowStepIfSuccessful = (lambda results, s: results is SUCCESS and not OVERRIDE_HIDE_IF)

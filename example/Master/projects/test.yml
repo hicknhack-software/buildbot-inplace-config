@@ -1,0 +1,6 @@
+name: 'Twofold-Qt'
+repoType: 'git'
+#repoUrl: 'https://github.com/hicknhack-software/Twofold-Qt.git'
+repoUrl: 'https://github.com/arBmind/Twofold-Qt.git'
+repoUser: ''
+repoPassword: ''

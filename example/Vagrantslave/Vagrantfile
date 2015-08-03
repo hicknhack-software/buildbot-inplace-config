@@ -1,0 +1,32 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.box_check_update = false # speedup loading
+  config.vm.network "private_network", ip: "10.226.189.2"
+
+  config.ssh.insert_key = false # ease communication between machines
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true # only ansible-vm mounts
+  #config.vm.synced_folder "../buildbot", "/buildbot"
+
+  # buildbot master
+  config.vm.define "slave-vm" do |slave|
+    slave.vm.hostname = "slave-vm"
+  end
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "1024"
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    #sudo apt-get update
+    sudo apt-get install -y git python-pip build-essential python-dev libffi-dev
+    sudo pip install pyopenssl jrnl service_identity buildbot-slave
+    sudo -u vagrant mkdir ~vagrant/scripts
+    sudo -u vagrant buildslave create-slave ~vagrant 10.226.189.1:9989 "testslave" "test"
+  SHELL
+  # run vagrant ssh
+  # $ buildslave start .
+end
