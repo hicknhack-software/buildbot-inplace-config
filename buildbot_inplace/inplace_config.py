@@ -17,6 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from yaml import safe_load
+from buildbot.util import flatten
 
 
 class Profile(dict):
@@ -34,7 +35,7 @@ class Profile(dict):
 
     @property
     def setups(self):
-        return self['setup']
+        return flatten([self.get('setups', self.get('setup',[]))])
 
 
 class Action(dict):
@@ -44,10 +45,10 @@ class Action(dict):
 
     @property
     def command_keys(self):
-        return filter(lambda key: key != 'name', self.keys())
+        return [key for key in self.keys() if key != 'name']
 
-    def commands_for_key(self, command_key):
-        return self.get(command_key)
+    def commands_for_key(self, key):
+        return flatten([self.get(key)])
 
 
 class ProfileCommand:
@@ -58,17 +59,17 @@ class ProfileCommand:
 
 class InplaceConfig:
     def __init__(self, profiles, actions):
-        self.profiles = map(lambda profile_dict: Profile(**profile_dict), profiles)
-        self.actions = map(lambda action_dict: Action(**action_dict), actions)
+        self.profiles = [Profile(**profile_dict) for profile_dict in profiles]
+        self.actions = [Action(**action_dict) for action_dict in actions]
 
     @property
     def platform_names(self):
-        return map(lambda profile: profile.platform, self.profiles)
+        return [profile.platform for profile in self.profiles]
 
     def profile_commands(self, profile):
-        return filter(lambda action: action.commands,
-                      map(lambda action: ProfileCommand(action.name, action.commands_for_key(profile.command_key)),
-                          self.actions))
+        all_commands = [ProfileCommand(action.name, action.commands_for_key(profile.command_key))
+                        for action in self.actions]
+        return [cmd for cmd in all_commands if cmd.commands]
 
     @staticmethod
     def from_text(yaml_text):
