@@ -78,22 +78,22 @@ class SetupStep(ShellMixin, BuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        slave = self.config.inplace_slaves.named_get(self.getSlaveName())
-        shell_config = self._shell_config(slave)
-        remote_cmd = self._command(slave, shell_config)
+        worker = self.config.inplace_workers.named_get(self.getWorkerName())
+        shell_config = self._shell_config(worker)
+        remote_cmd = self._command(worker, shell_config)
         cmd = yield self.makeRemoteShellCommand(command=remote_cmd, collectStdout=True, stdioLogName="envLog")
         self.consumer = EnvironmentParser(self.env_dict, shell_config['path_delimiter'])
         self.addLogObserver('envLog', LineConsumerLogObserver(self.consumer.retrieve))
         yield self.runCommand(cmd)
         yield defer.returnValue(cmd.results())
 
-    def _shell_config(self, slave_info):
-        shell = slave_info.shell
+    def _shell_config(self, worker_info):
+        shell = worker_info.shell
         if shell not in self.SHELL_CONFIG:
             shell = self.FALLBACK_SHELL
         return self.SHELL_CONFIG[shell]
 
-    def _command(self, slave_info, shell_config):
-        setup = ''.join([shell_config['prefix'], slave_info.setup_dir, self.setup, shell_config['suffix']])
+    def _command(self, worker_info, shell_config):
+        setup = ''.join([shell_config['prefix'], worker_info.setup_dir, self.setup, shell_config['suffix']])
         shell = shell_config['start']
         return shell + [';'.join([setup, shell_config['echo_env']])]

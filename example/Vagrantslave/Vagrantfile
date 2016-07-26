@@ -12,8 +12,8 @@ Vagrant.configure(2) do |config|
   #config.vm.synced_folder "../buildbot", "/buildbot"
 
   # buildbot master
-  config.vm.define "slave-vm" do |slave|
-    slave.vm.hostname = "slave-vm"
+  config.vm.define "worker-vm" do |worker|
+    worker.vm.hostname = "worker-vm"
   end
 
   config.vm.provider "virtualbox" do |vb|
@@ -23,10 +23,11 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", inline: <<-SHELL
     #sudo apt-get update
     sudo apt-get install -y git python-pip build-essential python-dev libffi-dev
-    sudo pip install pyopenssl jrnl service_identity buildbot-slave
+    sudo pip install pyopenssl jrnl service_identity
+    sudo pip install buildbot-worker --pre
     sudo -u vagrant mkdir ~vagrant/scripts
-    sudo -u vagrant buildslave create-slave ~vagrant 10.226.189.1:9989 "testslave" "test"
+    sudo -u vagrant buildbot-worker create-worker ~vagrant 10.226.189.1:9989 "testworker" "test"
   SHELL
   # run vagrant ssh
-  # $ buildslave start .
+  # $ buildbot-worker start .
 end

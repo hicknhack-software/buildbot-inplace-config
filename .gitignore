@@ -54,3 +54,4 @@ docs/_build/
 target/
 .vagrant
 example/Master/
+.idea/

@@ -1,4 +1,4 @@
-name: 'testslave'
+name: 'testworker'
 password: 'test'
 shell: 'bash'
 setupDir: '~/scripts'

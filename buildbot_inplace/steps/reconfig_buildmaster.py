@@ -37,7 +37,7 @@ def create_master_config(config_dict):
         master_config.load_caches(filename, config_dict)
         master_config.load_schedulers(filename, config_dict)
         master_config.load_builders(filename, config_dict)
-        master_config.load_slaves(filename, config_dict)
+        master_config.load_workers(filename, config_dict)
         master_config.load_change_sources(filename, config_dict)
         master_config.load_status(filename, config_dict)
         master_config.load_user_managers(filename, config_dict)
@@ -80,7 +80,7 @@ class ReconfigBuildmasterStep(MasterShellCommand):
         if self.from_project:
             master_config = create_master_config(self.config)
             self.master.config = master_config
-            for svc in self.master.buildslaves.services:
+            for svc in self.master.workers.services:
                 svc.configured = False
             self.master.reconfigServiceWithBuildbotConfig(master_config)
         else:

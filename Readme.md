@@ -23,8 +23,8 @@ reload(buildbot_inplace)
 # use InplaceConfig instead of a bare dict
 c = BuildmasterConfig = InplaceConfig()
 
-# projects and slaves are loaded from these directories
-c.load_slaves('slaves')
+# projects and workers are loaded from these directories
+c.load_workers('workers')
 c.load_projects('projects')
 
 # all your normal buildbot configurations
@@ -43,12 +43,12 @@ c['db'] = {'db_url': "sqlite:///state.sqlite"}
 c.setup_inplace()
 ```
 
-Now you need slave and project configurations.
+Now you need worker and project configurations.
 
-We use Ansible and custom roles to setup our Buildbot slaves.
+We use Ansible and custom roles to setup our Buildbot workers.
 A configuration looks like this:
 ```yaml
-name: 'testslave' # name of the slave that appears on Buildbot
+name: 'testworker' # name of the worker that appears on Buildbot
 password: 'test' # shared secret to authenticate on Buildbot
 shell: 'bash' # shell type 'bash' or 'cmd'
 platforms: ['Linux', 'Ubuntu', 'Ubuntu-14.04', 'Ubuntu1404'] # list of tags that match the platform
@@ -69,12 +69,12 @@ This should be all very straight forward.
 The real magic happens in the project. You just add a `.buildbot.yml` file to the root of your repository.
 This should look like this:
 ```yaml
-# each profile will become a build if a proper slave is found
+# each profile will become a build if a proper worker is found
 profiles:
 - name: "Linux Qt5.3 GCC 4.8" # name of the profile that apears in Buildbot
-  platform: Ubuntu1404 # the platform tag that a slave has to have
+  platform: Ubuntu1404 # the platform tag that a worker has to have
   commands: std # key used in the action (see below)
-  setup: ['qt53_gcc48'] # setup tags a slave has to match
+  setup: ['qt53_gcc48'] # setup tags a worker has to match
                         # these are also the names of setup scripts that are executed before the build actions start
 
 # each action is executed for each profile
@@ -90,7 +90,7 @@ See "Twofold buildbot.yml":https://github.com/hicknhack-software/Twofold-Qt/blob
 ## Features
 
 * each project carries it's build instructions
-* platform and setup tags for build slave matching
+* platform and setup tags for build worker matching
 * support for git projects
 
 ## Releases

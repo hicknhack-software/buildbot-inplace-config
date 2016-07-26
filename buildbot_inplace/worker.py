@@ -20,7 +20,7 @@ from glob import glob
 from os import path
 from twisted.python import log
 from yaml import safe_load
-from buildbot.buildslave import BuildSlave
+from buildbot.worker import Worker as BuildbotWorker
 
 
 def _normalize_path(p):
@@ -29,7 +29,8 @@ def _normalize_path(p):
         s += "/"
     return s
 
-class Slave(dict):
+
+class Worker(dict):
     @property
     def name(self):
         return self['name']
@@ -54,27 +55,27 @@ class Slave(dict):
     def setups(self):
         return self['setups']
 
-    def build_slave(self):
-        return BuildSlave(self.name, self.password)
+    def build_worker(self):
+        return BuildbotWorker(self.name, self.password)
 
     @staticmethod
-    def load(slaves_dir, inplace_slaves, slaves):
-        files = glob(path.join(slaves_dir, '*.yml'))
+    def load(workers_dir, inplace_workers, workers):
+        files = glob(path.join(workers_dir, '*.yml'))
         if not files:
-            raise Exception("No slaves found in '%s'!" % slaves_dir)
+            raise Exception("No workers found in '%s'!" % workers_dir)
 
-        slaves.clear()
-        inplace_slaves.clear()
+        workers.clear()
+        inplace_workers.clear()
         for f in files:
             s = open(f, 'r')
-            slave_dict = safe_load(s)
+            worker_dict = safe_load(s)
             s.close()
-            if not isinstance(slave_dict, dict):
+            if not isinstance(worker_dict, dict):
                 continue
 
-            inplace_slave = Slave(**slave_dict)
-            inplace_slaves.named_set(inplace_slave)
-            log.msg("Registered Slave '%s' on %s with setups %s" %
-                    (inplace_slave.name, ', '.join(inplace_slave.platforms), ', '.join(inplace_slave.setups)),
+            inplace_worker = Worker(**worker_dict)
+            inplace_workers.named_set(inplace_worker)
+            log.msg("Registered Worker '%s' on %s with setups %s" %
+                    (inplace_worker.name, ', '.join(inplace_worker.platforms), ', '.join(inplace_worker.setups)),
                     system='Inplace Config')
-            slaves.named_set(inplace_slave.build_slave())
+            workers.named_set(inplace_worker.build_worker())

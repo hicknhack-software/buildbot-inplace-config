@@ -35,8 +35,8 @@ class SetupBuildFactory(BuildFactory):
             prepare_dict = dict(name=desc, description=desc, descriptionDone=desc)
             self.addStep(SetupStep(setup, config=config, env=env, **prepare_dict))
         self.addStep(create_checkout_step(project))
-        pcs = project.inplace.profile_commands(profile)
-        for pc in pcs:
+        profile_commands = project.inplace.profile_commands(profile)
+        for pc in profile_commands:
             shell_dict = dict(name=pc.name, description=pc.name, descriptionDone=pc.name)
             if len(pc.commands) == 1:
                 self.addStep(ShellCommand(command=pc.commands[0], env=env, **shell_dict))

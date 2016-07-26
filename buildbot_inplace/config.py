@@ -24,7 +24,7 @@ from buildbot.schedulers.triggerable import Triggerable
 from inplace_build import InplaceBuildFactory
 from project import Project
 from setup_build import SetupBuildFactory
-from slave import Slave
+from worker import Worker
 
 
 class NamedList(list):
@@ -55,7 +55,7 @@ class Wrapper(dict):
 
     def __init__(self, **kwargs):
         super(Wrapper, self).__init__(**kwargs)
-        self._inplace_slaves = NamedList()
+        self._inplace_workers = NamedList()
         self._projects = NamedList()
 
     @property
@@ -71,12 +71,12 @@ class Wrapper(dict):
         return self.named_list('change_source')
 
     @property
-    def slaves(self):
-        return self.named_list('slaves')
+    def workers(self):
+        return self.named_list('workers')
 
     @property
-    def inplace_slaves(self):
-        return self._inplace_slaves
+    def inplace_workers(self):
+        return self._inplace_workers
 
     @property
     def projects(self):
@@ -87,42 +87,42 @@ class Wrapper(dict):
             self[key] = NamedList()
         return self[key]
 
-    def load_slaves(self, path):
-        Slave.load(path, self.inplace_slaves, self.slaves)
+    def load_workers(self, path):
+        Worker.load(path, self.inplace_workers, self.workers)
 
     def load_projects(self, path):
         Project.load(path, self.projects)
 
     DUMMY_NAME = "Dummy"
-    DUMMY_TRIGGER = "Trigger Dummy"
+    DUMMY_TRIGGER = "Trigger_Dummy"
 
     def setup_inplace(self):
         self.builders.clear()
         self.schedulers.clear()
         builder_name = self.DUMMY_NAME
         trigger_name = self.DUMMY_TRIGGER
-        slave_names = self.inplace_slaves.names
-        self.builders.named_set(BuilderConfig(name=builder_name, slavenames=slave_names, factory=BuildFactory()))
+        worker_names = self.inplace_workers.names
+        self.builders.named_set(BuilderConfig(name=builder_name, workernames=worker_names, factory=BuildFactory()))
         self.schedulers.named_set(ForceScheduler(name=trigger_name, builderNames=[builder_name]))
         for project in self.projects:
             builder_name = "%s_Builder" % project.name
             trigger_name = "Force_%s_Build" % project.name
             builder_factory = InplaceBuildFactory(self, project)
-            self.builders.named_set(BuilderConfig(name=builder_name, slavenames=slave_names, factory=builder_factory))
+            self.builders.named_set(BuilderConfig(name=builder_name, workernames=worker_names, factory=builder_factory))
             self.schedulers.named_set(ForceScheduler(name=trigger_name, builderNames=[builder_name]))
 
-    def project_profile_slave_names(self, profile):
-        return [slave.name
-                for slave in self.inplace_slaves
-                if set(profile.setups).issubset(set(slave.setups))
-                and profile.platform in slave.platforms]
+    def project_profile_worker_names(self, profile):
+        return [worker.name
+                for worker in self.inplace_workers
+                if set(profile.setups).issubset(set(worker.setups))
+                and profile.platform in worker.platforms]
 
     def setup_project_inplace(self, project):
         self.setup_inplace()
         for profile in project.inplace.profiles:
-            slave_names = self.project_profile_slave_names(profile)
-            if not slave_names:
-                log.msg("Failed to find slave for platform '%s' and setups '%s' (project '%s')" %
+            worker_names = self.project_profile_worker_names(profile)
+            if not worker_names:
+                log.msg("Failed to find worker for platform '%s' and setups '%s' (project '%s')" %
                         (profile.platform, ', '.join(profile.setups), project.name),
                         system='Inplace Config')
                 continue  # profile not executable
@@ -130,14 +130,14 @@ class Wrapper(dict):
             builder_name = "_".join([project.name, profile.platform, profile.name])
             trigger_name = _project_profile_trigger_name(project.name, profile)
             build_factory = SetupBuildFactory(self, project, profile)
-            self.builders.named_set(BuilderConfig(name=builder_name, slavenames=slave_names, factory=build_factory))
+            self.builders.named_set(BuilderConfig(name=builder_name, workernames=worker_names, factory=build_factory))
             self.schedulers.named_set(Triggerable(name=trigger_name, builderNames=[builder_name]))
 
     def project_trigger_names(self, project):
         return [
             _project_profile_trigger_name(project.name, profile)
             for profile in project.inplace.profiles
-            if self.project_profile_slave_names(profile)]
+            if self.project_profile_worker_names(profile)]
 
 def _project_profile_trigger_name(project_name, profile):
     return "_".join([project_name, profile.platform, profile.name, "Trigger"])
