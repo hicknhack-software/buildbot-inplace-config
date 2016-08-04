@@ -16,9 +16,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from Queue import Queue
 from buildbot.config import MasterConfig
-from buildbot.status.results import FAILURE
+from buildbot.process.results import FAILURE
 from buildbot.steps.master import MasterShellCommand
 from .success import ShowStepIfSuccessful
 
