@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from buildbot.process.factory import BuildFactory
-
+from twisted.internet import defer
 from buildbot.steps.trigger import Trigger
 from steps.checkout import create_checkout_step
 from steps.reconfig_buildmaster import ReconfigBuildmasterStep
@@ -34,10 +34,11 @@ class InplaceTriggerBuilds(Trigger):
         self.config = config
         self.project = project
 
-    # @defer.inlineCallbacks
+    @defer.inlineCallbacks
     def run(self):
         self.schedulerNames = self.config.project_trigger_names(self.project)
-        return super(InplaceTriggerBuilds, self).run()
+        rv = yield super(InplaceTriggerBuilds, self).run()
+        defer.returnValue(rv)
 
 
 class InplaceBuildFactory(BuildFactory):
