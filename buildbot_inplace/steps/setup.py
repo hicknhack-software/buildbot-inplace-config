@@ -53,6 +53,7 @@ class SetupStep(ShellMixin, BuildStep):
     SHELL_CONFIG = {
         "cmd": dict(
             path_delimiter=";",
+            cmd_delimiter="&",
             start=["cmd", "/c"],
             echo_env="set",
             prefix="",
@@ -60,6 +61,7 @@ class SetupStep(ShellMixin, BuildStep):
         ),
         "bash": dict(
             path_delimiter=":",
+            cmd_delimiter=";",
             start=["bash", "-c"],
             echo_env="env",
             prefix=". ",
@@ -96,4 +98,4 @@ class SetupStep(ShellMixin, BuildStep):
     def _command(self, worker_info, shell_config):
         setup = ''.join([shell_config['prefix'], worker_info.setup_dir, self.setup, shell_config['suffix']])
         shell = shell_config['start']
-        return shell + [';'.join([setup, shell_config['echo_env']])]
+        return shell + [shell_config['cmd_delimiter'].join([setup, shell_config['echo_env']])]
