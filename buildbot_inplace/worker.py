@@ -21,6 +21,7 @@ from os import path
 from twisted.python import log
 from yaml import safe_load
 from buildbot.worker import Worker as BuildbotWorker
+from pprint import pformat
 
 
 def _normalize_path(p):
@@ -76,6 +77,6 @@ class Worker(dict):
             inplace_worker = Worker(**worker_dict)
             inplace_workers.named_set(inplace_worker)
             log.msg("Registered Worker '%s' on %s with setups %s" %
-                    (inplace_worker.name, ', '.join(inplace_worker.platforms), ', '.join(inplace_worker.setups)),
+                    (inplace_worker.name, pformat(inplace_worker.platforms), pformat(inplace_worker.setups)),
                     system='Inplace Config')
             workers.named_set(inplace_worker.build_worker())

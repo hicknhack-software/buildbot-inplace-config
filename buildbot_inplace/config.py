@@ -25,7 +25,7 @@ from inplace_build import InplaceBuildFactory
 from project import Project
 from setup_build import SetupBuildFactory
 from worker import Worker
-
+from pprint import pformat
 
 class NamedList(list):
     def named_set(self, elem):
@@ -119,11 +119,15 @@ class Wrapper(dict):
 
     def setup_project_inplace(self, project):
         self.setup_inplace()
+        for worker in self.inplace_workers:
+            log.msg("Got worker '%s' for platform %s and setups %s" %
+                    (worker.name, pformat(worker.platforms), pformat(worker.setups)),
+                    system='Inplace Config')
         for profile in project.inplace.profiles:
             worker_names = self.project_profile_worker_names(profile)
             if not worker_names:
                 log.msg("Failed to find worker for platform '%s' and setups '%s' (project '%s')" %
-                        (profile.platform, ', '.join(profile.setups), project.name),
+                        (profile.platform, pformat(profile.setups), project.name),
                         system='Inplace Config')
                 continue  # profile not executable
 
