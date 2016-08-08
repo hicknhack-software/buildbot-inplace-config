@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from buildbot.config import MasterConfig
-from buildbot.process.results import FAILURE
+from buildbot.status.builder import FAILURE
 from buildbot.steps.master import MasterShellCommand
 from .success import ShowStepIfSuccessful
 
