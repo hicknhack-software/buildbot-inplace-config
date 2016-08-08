@@ -16,7 +16,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from buildbot.process.results import SUCCESS
+try:
+    from buildbot.status.results import SUCCESS
+except ImportError:
+    from buildbot.process.results import SUCCESS
 
 OVERRIDE_HIDE_IF = False
 ShowStepIfSuccessful = (lambda results, s: results is SUCCESS and not OVERRIDE_HIDE_IF)
