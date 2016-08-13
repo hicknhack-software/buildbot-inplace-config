@@ -16,16 +16,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import random
+
 from buildbot.config import BuilderConfig
-from twisted.python import log
-from buildbot.process.factory import BuildFactory
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.triggerable import Triggerable
-from inplace_build import InplaceBuildFactory
-from project import Project
-from setup_build import SetupBuildFactory
-from worker import Worker
-from pprint import pformat
+
+from .project import Project
+from .setup_build_factory import SetupBuildFactory
+from .spawner_build_factory import SpawnerBuildFactory
+from .worker import Worker
+
 
 class NamedList(list):
     def named_set(self, elem):
@@ -93,55 +94,50 @@ class Wrapper(dict):
     def load_projects(self, path):
         Project.load(path, self.projects)
 
-    DUMMY_NAME = "Dummy"
-    DUMMY_TRIGGER = "Trigger_Dummy"
-
-    def setup_inplace(self):
-        self.builders.clear()
-        self.schedulers.clear()
-        builder_name = self.DUMMY_NAME
-        trigger_name = self.DUMMY_TRIGGER
-        worker_names = self.inplace_workers.names
-        self.builders.named_set(BuilderConfig(name=builder_name, workernames=worker_names, factory=BuildFactory()))
-        self.schedulers.named_set(ForceScheduler(name=trigger_name, builderNames=[builder_name]))
-        for project in self.projects:
-            builder_name = "%s_Builder" % project.name
-            trigger_name = "Force_%s_Build" % project.name
-            builder_factory = InplaceBuildFactory(self, project)
-            self.builders.named_set(BuilderConfig(name=builder_name, workernames=worker_names, factory=builder_factory))
-            self.schedulers.named_set(ForceScheduler(name=trigger_name, builderNames=[builder_name]))
-
     def project_profile_worker_names(self, profile):
         return [worker.name
                 for worker in self.inplace_workers
                 if set(profile.setups).issubset(set(worker.setups))
                 and profile.platform in worker.platforms]
 
-    def setup_project_inplace(self, project):
-        self.setup_inplace()
-        for worker in self.inplace_workers:
-            log.msg("Got worker '%s' for platform %s and setups %s" %
-                    (worker.name, pformat(worker.platforms), pformat(worker.setups)),
-                    system='Inplace Config')
-        for profile in project.inplace.profiles:
-            worker_names = self.project_profile_worker_names(profile)
-            if not worker_names:
-                log.msg("Failed to find worker for platform '%s' and setups '%s' (project '%s')" %
-                        (profile.platform, pformat(profile.setups), project.name),
-                        system='Inplace Config')
-                continue  # profile not executable
+    def setup_inplace(self):
+        self.builders.clear()
+        self.schedulers.clear()
+        worker_names = self.inplace_workers.names
 
-            builder_name = "_".join([project.name, profile.platform, profile.name])
-            trigger_name = _project_profile_trigger_name(project.name, profile)
-            build_factory = SetupBuildFactory(self, project, profile)
-            self.builders.named_set(BuilderConfig(name=builder_name, workernames=worker_names, factory=build_factory))
-            self.schedulers.named_set(Triggerable(name=trigger_name, builderNames=[builder_name]))
+        def pickNextWorker(_, worker_pool, build):
+            platform = build.properties['inplace_platform']
+            setups = set(build.properties['inplace_setups'])
 
-    def project_trigger_names(self, project):
-        return [
-            _project_profile_trigger_name(project.name, profile)
-            for profile in project.inplace.profiles
-            if self.project_profile_worker_names(profile)]
+            def isOption(worker):
+                name = worker.name
+                inplace_worker = self.inplace_workers.named_get(name)
+                return setups.issubset(set(inplace_worker.setups)) and platform in inplace_worker.platforms
 
-def _project_profile_trigger_name(project_name, profile):
-    return "_".join([project_name, profile.platform, profile.name, "Trigger"])
+            possible_workers = [w for w in worker_pool if isOption(w.worker)]
+            return random.choice(possible_workers) if possible_workers else None
+
+        for project in self.projects:
+            builder_name = "Inplace %s" % project.name
+            trigger_name = "Build %s" % project.name
+            spawner_name = project.name
+            force_trigger_name = "Force-%s" % project.name
+
+            builder_factory = SpawnerBuildFactory(self, trigger_name, project)
+            builder_config = BuilderConfig(name=spawner_name, workernames=worker_names, factory=builder_factory)
+            self.builders.named_set(builder_config)
+            self.schedulers.named_set(ForceScheduler(name=force_trigger_name, builderNames=[spawner_name]))
+
+            inplace_builder_config = BuilderConfig(
+                name=builder_name,
+                workernames=worker_names,
+                factory=SetupBuildFactory(self, project),
+                nextWorker=pickNextWorker)
+            inplace_scheduler = Triggerable(
+                name=trigger_name,
+                builderNames=[builder_name])
+
+            self.builders.named_set(inplace_builder_config)
+            self.schedulers.named_set(inplace_scheduler)
+
+            # TODO: add git triggers

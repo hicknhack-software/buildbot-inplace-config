@@ -20,8 +20,9 @@ from twisted.internet import defer
 from buildbot.process.buildstep import BuildStep, ShellMixin
 from buildbot.process.logobserver import LineConsumerLogObserver
 
+
 class EnvironmentParser:
-    PATH_LISTS = ['path'] # use lowercase here!
+    PATH_LISTS = ['path']  # use lowercase here!
 
     def __init__(self, env_dict, path_delimiter=':'):
         self.env_dict = env_dict
@@ -72,7 +73,7 @@ class SetupStep(ShellMixin, BuildStep):
 
     def __init__(self, setup, config, env, **kwargs):
         self.setup = setup
-        self.config = config
+        self.global_config = config
         self.env_dict = env
         self.consumer = None
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
@@ -80,7 +81,7 @@ class SetupStep(ShellMixin, BuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        worker = self.config.inplace_workers.named_get(self.getWorkerName())
+        worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
         shell_config = self._shell_config(worker)
         remote_cmd = self._command(worker, shell_config)
         cmd = yield self.makeRemoteShellCommand(command=remote_cmd, collectStdout=True, stdioLogName="envLog")

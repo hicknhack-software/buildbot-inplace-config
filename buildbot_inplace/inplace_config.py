@@ -20,6 +20,10 @@ from yaml import safe_load
 from buildbot.util import flatten
 
 
+class BuildbotYmlInvalid(Exception):
+    pass
+
+
 class Profile(dict):
     @property
     def name(self):
@@ -35,7 +39,7 @@ class Profile(dict):
 
     @property
     def setups(self):
-        return flatten([self.get('setups', self.get('setup',[]))])
+        return flatten([self.get('setups', self.get('setup', []))])
 
 
 class Action(dict):
@@ -66,6 +70,12 @@ class InplaceConfig:
     def platform_names(self):
         return [profile.platform for profile in self.profiles]
 
+    def profile_named_get(self, name):
+        for profile in self.profiles:
+            if profile.name == name:
+                return profile
+        return None
+
     def profile_commands(self, profile):
         all_commands = [ProfileCommand(action.name, action.commands_for_key(profile.command_key))
                         for action in self.actions]
@@ -73,7 +83,10 @@ class InplaceConfig:
 
     @staticmethod
     def from_text(yaml_text):
-        inplace_dict = safe_load(yaml_text)
+        try:
+            inplace_dict = safe_load(yaml_text)
+        except Exception as e:
+            raise BuildbotYmlInvalid("Invalid YAML data\n" + str(e))
         if not isinstance(inplace_dict, dict):
-            return
+            raise BuildbotYmlInvalid("YAML should contain a dict")
         return InplaceConfig(**inplace_dict)

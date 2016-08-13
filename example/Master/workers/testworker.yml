@@ -3,4 +3,4 @@ password: 'test'
 shell: 'bash'
 setupDir: '~/scripts'
 platforms: ['Linux', 'Ubuntu', 'Ubuntu-14.04', 'Ubuntu1404']
-setups: ['qt530_gcc490']
+setups: ['qt53_gcc49']
