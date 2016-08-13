@@ -66,10 +66,7 @@ class InplaceTriggerBuilds(Trigger, ConfiguredStepMixin):
             props_to_set.setProperty('inplace_platform', profile.platform, ".buildbot.yml")
             props_to_set.setProperty('inplace_setups', profile.setups, ".buildbot.yml")
 
-            triggered_schedulers.append({
-                'sched_name': sched_name,
-                'props_to_set': props_to_set,
-                'unimportant': False})
+            triggered_schedulers.append((sched_name, props_to_set))
 
         if log:
             yield log.finish()
