@@ -18,6 +18,7 @@ limitations under the License.
 """
 from urlparse import urlparse, urlunparse
 from buildbot.steps.source.git import Git
+from buildbot.steps.source.svn import SVN
 from .success import ShowStepIfSuccessful
 
 
@@ -40,5 +41,15 @@ def create_checkout_step(project):
                    description=description,
                    descriptionDone=description,
                    hideStepIf=ShowStepIfSuccessful)
+    elif repo_type == "svn":
+        return SVN(repourl=project.repo_url,
+                   mode='incremental',
+                   username=project.repo_user,
+                   password=project.repo_password,
+                   name=description,
+                   description=description,
+                   descriptionDone=description,
+                   hideStepIf=ShowStepIfSuccessful)
+
     else:
         raise Exception("Repository type '" + str(repo_type) + "' not supported.")
