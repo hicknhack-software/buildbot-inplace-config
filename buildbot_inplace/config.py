@@ -105,16 +105,16 @@ class Wrapper(dict):
         self.schedulers.clear()
         worker_names = self.inplace_workers.names
 
-        def pickNextWorker(_, worker_pool, build):
+        def pick_next_worker(_, worker_pool, build):
             platform = build.properties['inplace_platform']
             setups = set(build.properties['inplace_setups'])
 
-            def isOption(worker):
+            def is_option(worker):
                 name = worker.name
                 inplace_worker = self.inplace_workers.named_get(name)
                 return setups.issubset(set(inplace_worker.setups)) and platform in inplace_worker.platforms
 
-            possible_workers = [w for w in worker_pool if isOption(w.worker)]
+            possible_workers = [w for w in worker_pool if is_option(w.worker)]
             return random.choice(possible_workers) if possible_workers else None
 
         for project in self.projects:
@@ -132,7 +132,7 @@ class Wrapper(dict):
                 name=builder_name,
                 workernames=worker_names,
                 factory=SetupBuildFactory(self, project),
-                nextWorker=pickNextWorker)
+                nextWorker=pick_next_worker)
             inplace_scheduler = Triggerable(
                 name=trigger_name,
                 builderNames=[builder_name])
