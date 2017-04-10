@@ -39,6 +39,10 @@ class Project(dict):
         return self['repoUser']
 
     @property
+    def repo_branch(self):
+        return self['repoBranch']
+
+    @property
     def repo_password(self):
         return self['repoPassword']
 
