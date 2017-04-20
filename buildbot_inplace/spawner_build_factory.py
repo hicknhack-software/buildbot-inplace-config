@@ -22,6 +22,7 @@ from twisted.internet import defer
 from buildbot.steps.trigger import Trigger
 
 from .steps.configured_step_mixin import ConfiguredStepMixin
+from .steps.authenticate_checkout import create_authenticate_checkout_step
 from .steps.checkout import create_checkout_step
 
 
@@ -83,6 +84,7 @@ class SpawnerBuildFactory(BuildFactory):
 
     def __init__(self, config, scheduler, project):
         super(SpawnerBuildFactory, self).__init__()
+        self.addStep(create_authenticate_checkout_step(project))
         self.addStep(create_checkout_step(project))
         self.addStep(InplaceTriggerBuilds(config, project, scheduler,
                                           updateSourceStamp=True,

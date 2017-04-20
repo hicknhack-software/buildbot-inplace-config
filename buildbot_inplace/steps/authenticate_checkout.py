@@ -19,6 +19,7 @@ limitations under the License.
 from urlparse import urlparse, urlunparse
 from buildbot.steps.source.git import Git
 from buildbot.steps.source.svn import SVN
+from buildbot.steps.shell import ShellCommand
 from .success import ShowStepIfSuccessful
 
 
@@ -31,9 +32,14 @@ def set_url_auth(git_url, user, password):
 
 def create_authenticate_checkout_step(project):
     description = 'Authenticate Checkout'
-
-    repo_type = project.repo_type
-    if repo_type != "git":
-        return ShellCommand()
+    repo_credentials = project.repo_credentials
+    if not repo_credentials:
+    	return ShellCommand(command=['echo', 'No Authentication Supplied. Skipping.'])
     
-    return ShellCommand()
+    return ShellCommand(command=['echo', 'TODO: Store Authentication.'])
+
+    # repo_type = project.repo_type
+    # if repo_type != "git":
+    #     return ShellCommand()
+    
+    # return ShellCommand()

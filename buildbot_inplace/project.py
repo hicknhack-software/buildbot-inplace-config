@@ -20,6 +20,16 @@ from glob import glob
 from os import path
 from yaml import safe_load
 
+class RepoCredential(dict):
+    @property
+    def url(self):
+        return self['url']
+
+    def user(self):
+        return self['user']
+
+    def password(self):
+        return self['password']
 
 class Project(dict):
     @property
@@ -45,6 +55,12 @@ class Project(dict):
     @property
     def repo_password(self):
         return self['repoPassword']
+
+    @property
+    def repo_credentials(self):
+        if not 'repoCredentials' in self:
+            return []
+        return [RepoCredential(**credentail_dict) for credentail_dict in repo_credentails]
 
     @property
     def inplace(self):
