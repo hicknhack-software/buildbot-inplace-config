@@ -46,14 +46,20 @@ class Project(dict):
 
     @property
     def repo_user(self):
+        if not 'repoUser' in self:
+            return ''
         return self['repoUser']
 
     @property
     def repo_branch(self):
+        if not 'repoBranch' in self:
+            return ''
         return self['repoBranch']
 
     @property
     def repo_password(self):
+        if not 'repoPassword' in self:
+            return ''
         return self['repoPassword']
 
     @property
