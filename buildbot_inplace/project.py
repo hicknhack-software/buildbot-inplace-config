@@ -68,7 +68,8 @@ class Project(dict):
     def repo_credentials(self):
         if 'repoCredentials' not in self:
             return []
-        return [RepoCredential(**credentail_dict) for credentail_dict in repo_credentails]
+        repo_credentials = self['repoCredentials']
+        return [RepoCredential(**credential_dict) for credential_dict in repo_credentials]
 
     @property
     def inplace(self):
