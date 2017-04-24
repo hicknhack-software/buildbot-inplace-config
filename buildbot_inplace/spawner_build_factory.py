@@ -22,7 +22,7 @@ from twisted.internet import defer
 from buildbot.steps.trigger import Trigger
 
 from .steps.configured_step_mixin import ConfiguredStepMixin
-from .steps.authenticate_checkout import create_authenticate_checkout_step
+from .steps.authenticate_checkout import create_authenticate_checkout_steps
 from .steps.checkout import create_checkout_step
 
 
@@ -49,7 +49,7 @@ class InplaceTriggerBuilds(Trigger, ConfiguredStepMixin):
 
     @defer.inlineCallbacks
     def getSchedulersAndProperties(self):
-        sched_name = self.schedulerNames[0]
+        scheduler_name = self.schedulerNames[0]
         triggered_schedulers = []
         log = None
 
@@ -67,7 +67,7 @@ class InplaceTriggerBuilds(Trigger, ConfiguredStepMixin):
             props_to_set.setProperty('inplace_platform', profile.platform, ".buildbot.yml")
             props_to_set.setProperty('inplace_setups', profile.setups, ".buildbot.yml")
 
-            triggered_schedulers.append((sched_name, props_to_set))
+            triggered_schedulers.append((scheduler_name, props_to_set))
 
         if log:
             yield log.finish()
@@ -84,7 +84,7 @@ class SpawnerBuildFactory(BuildFactory):
 
     def __init__(self, config, scheduler, project):
         super(SpawnerBuildFactory, self).__init__()
-        self.addStep(create_authenticate_checkout_step(project))
+        self.addSteps(create_authenticate_checkout_steps(project))
         self.addStep(create_checkout_step(project))
         self.addStep(InplaceTriggerBuilds(config, project, scheduler,
                                           updateSourceStamp=True,

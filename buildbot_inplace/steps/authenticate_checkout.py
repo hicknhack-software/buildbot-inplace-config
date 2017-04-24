@@ -17,10 +17,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from urlparse import urlparse, urlunparse
-from buildbot.steps.source.git import Git
-from buildbot.steps.source.svn import SVN
 from buildbot.steps.shell import ShellCommand
-from .success import ShowStepIfSuccessful
+from ..project import RepoCredential
 
 
 def set_url_auth(git_url, user, password):
@@ -30,16 +28,13 @@ def set_url_auth(git_url, user, password):
     return urlunparse((scheme, netloc, url, params, query, fragment))
 
 
-def create_authenticate_checkout_step(project):
-    description = 'Authenticate Checkout'
+def create_authenticate_checkout_steps(project):
     repo_credentials = project.repo_credentials
-    if not repo_credentials:
-    	return ShellCommand(command=['echo', 'No Authentication Supplied. Skipping.'])
-    
-    return ShellCommand(command=['echo', 'TODO: Store Authentication.'])
+    if not repo_credentials or not repo_credentials.user or not repo_credentials.url or not repo_credentials.password:
+        return [ShellCommand(command=["echo", "Incomplete Authentication Supplied. Skipping."])]
 
-    # repo_type = project.repo_type
-    # if repo_type != "git":
-    #     return ShellCommand()
-    
-    # return ShellCommand()
+    assert isinstance(repo_credentials, RepoCredential)
+    configure_git_command = ["git", "config", "--global", "credential.helper", "store"]
+    auth_url = set_url_auth(git_url=repo_credentials.url, user=repo_credentials.user, password=repo_credentials.password)
+    update_store_command = ["echo", auth_url, ">", "~/.git-credentials"]
+    return [ShellCommand(command=configure_git_command), ShellCommand(command=update_store_command)]
