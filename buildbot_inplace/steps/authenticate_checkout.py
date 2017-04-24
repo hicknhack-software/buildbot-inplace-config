@@ -30,11 +30,15 @@ def set_url_auth(git_url, user, password):
 
 def create_authenticate_checkout_steps(project):
     repo_credentials = project.repo_credentials
-    if not repo_credentials or not repo_credentials.user or not repo_credentials.url or not repo_credentials.password:
-        return [ShellCommand(command=["echo", "Incomplete Authentication Supplied. Skipping."])]
-
-    assert isinstance(repo_credentials, RepoCredential)
-    configure_git_command = ["git", "config", "--global", "credential.helper", "store"]
-    auth_url = set_url_auth(git_url=repo_credentials.url, user=repo_credentials.user, password=repo_credentials.password)
-    update_store_command = ["echo", auth_url, ">", "~/.git-credentials"]
-    return [ShellCommand(command=configure_git_command), ShellCommand(command=update_store_command)]
+    if not repo_credentials:
+        return [ShellCommand(command=['echo', 'Incomplete Authentication Supplied. Skipping.'])]
+    auth_commands = [ShellCommand(command=['rm', '~/.git-credentials'])]
+    for repo_credential in repo_credentials:
+    	assert isinstance(repo_credentials, RepoCredential)
+    	if not repo_credential.url and not repo_credential.user and not repo_credential.password
+    		continue
+    	configure_git_command = ["git", "config", "--global", "credential.helper", "store"]
+    	auth_url = set_url_auth(git_url=repo_credentials.url, user=repo_credentials.user, password=repo_credentials.password)
+    	update_store_command = ["echo", auth_url, ">>", "~/.git-credentials"]
+    	auth_commands.extend([ShellCommand(command=configure_git_command), ShellCommand(command=update_store_command)])
+    return auth_commands
