@@ -27,7 +27,7 @@ def create_authenticate_checkout_steps(project):
         return [ShellCommand(name='Unauthorized.', command=['echo', 'Incomplete Authentication Supplied. Skipping.'])]
     auth_commands = [
         ShellCommand(name='Print environment', command=['env']),
-        ShellCommand(name='Delete Git Credentials', command=['rm', '-f', '$HOME/.git-credentials']),
+        ShellCommand(name='Delete Git Credentials', command='rm  -f $HOME/.git-credentials'),
         ShellCommand(name='Configure git store',
                      command=['git', 'config', '--global', 'credential.helper', 'store'])
     ]
