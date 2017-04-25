@@ -16,16 +16,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from urlparse import urlparse, urlunparse
+from checkout import set_url_auth
 from buildbot.steps.shell import ShellCommand
 from ..project import RepoCredential
-
-
-def set_url_auth(git_url, user, password):
-    scheme, netloc, url, params, query, fragment = urlparse(git_url)
-    if user and password:
-        netloc = "%(user)s:%(password)s@%(netloc)s" % locals()
-    return urlunparse((scheme, netloc, url, params, query, fragment))
 
 
 def create_authenticate_checkout_steps(project):
