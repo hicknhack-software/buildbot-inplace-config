@@ -37,6 +37,6 @@ def create_authenticate_checkout_steps(project):
             continue
         auth_url = set_url_auth(git_url=repo_credential.url, user=repo_credential.user,
                                 password=repo_credential.password)
-        auth_commands.append(ShellCommand(command='echo' + auth_url + '>> $HOME/.git-credentials',
+        auth_commands.append(ShellCommand(command='echo ' + auth_url + ' >> $HOME/.git-credentials',
                                           name='Store Credentials for Url ' + auth_url))
     return auth_commands
