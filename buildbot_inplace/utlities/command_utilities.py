@@ -36,7 +36,7 @@ class BashWorkerCommands(WorkerCommands):
         return 'rm -f'
 
 
-class CmdWorkerCommands(BashWorkerCommands):
+class CmdWorkerCommands(WorkerCommands):
     @property
     def remove(self):
         return 'del'
