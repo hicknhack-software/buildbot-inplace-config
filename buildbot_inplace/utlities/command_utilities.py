@@ -22,36 +22,53 @@ from ..worker import Worker
 
 class WorkerCommands(dict):
     @property
-    def remove(self):
+    def remove_command(self):
         return ''
 
     @property
-    def echo(self):
+    def echo_command(self):
         return 'echo'
+
+    @property
+    def home_path_var(self):
+        return ''
 
 
 class BashWorkerCommands(WorkerCommands):
     @property
-    def remove(self):
+    def remove_command(self):
         return 'rm -f'
+
+    @property
+    def home_path_var(self):
+        return '$HOME'
 
 
 class CmdWorkerCommands(WorkerCommands):
     @property
-    def remove(self):
+    def remove_command(self):
         return 'del'
+
+    @property
+    def home_path_var(self):
+        return '%HOMEPATH%'
 
 
 def get_worker_commands(worker_info):
+    worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
     assert isinstance(worker_info, Worker)
     return BashWorkerCommands if worker_info.shell == 'bash' else CmdWorkerCommands()
 
 
-def create_echo_command_string(output=''):
+def get_home_path_var():
+    worker_commands = get_worker_commands(worker_info=worker_info)
+    return worker_commands.home_path_var
+
+def create_echo_command_string(BuildStep=step, output=''):
     worker_commands = get_worker_commands(output)
-    return worker_commands.echo + " " + output
+    return worker_commands.echo_command + " " + output
 
 
 def create_delte_command_string(files=''):
     worker_commands = get_worker_commands(files)
-    return worker_commands.remove + " " + files
+    return worker_commands.remove_command + " " + files
