@@ -31,12 +31,19 @@ def set_url_auth(git_url, user, password):
 def create_authenticate_checkout_steps(project):
     repo_credentials = project.repo_credentials
     if not repo_credentials:
-        return [ShellCommand(name='Unauthorized.',command=['echo', 'Incomplete Authentication Supplied. Skipping.'])]
-    auth_commands = [ShellCommand(name='Clear Git Credentials',command=['echo', '>', '~/.git-credentials']), ShellCommand(name='Configure git store',command=['git', 'config', '--global', 'credential.helper', 'store'])]
+        return [ShellCommand(name='Unauthorized.', command=['echo', 'Incomplete Authentication Supplied. Skipping.'])]
+    auth_commands = [
+        ShellCommand(name='Print environment', command=['env']),
+        ShellCommand(name='Delete Git Credentials', command=['rm', '-f', '$HOME/.git-credentials']),
+        ShellCommand(name='Configure git store',
+                     command=['git', 'config', '--global', 'credential.helper', 'store'])
+    ]
     for repo_credential in repo_credentials:
-    	assert isinstance(repo_credential, RepoCredential)
-    	if not repo_credential.url and not repo_credential.user and not repo_credential.password:
-    		continue
-    	auth_url = set_url_auth(git_url=repo_credential.url, user=repo_credential.user, password=repo_credential.password)
-    	auth_commands.append(ShellCommand(name='Store Credentials for Url %auth_url%',command=["echo", auth_url, ">>", "~/.git-credentials"]))
+        assert isinstance(repo_credential, RepoCredential)
+        if not repo_credential.url and not repo_credential.user and not repo_credential.password:
+            continue
+        auth_url = set_url_auth(git_url=repo_credential.url, user=repo_credential.user,
+                                password=repo_credential.password)
+        auth_commands.append(ShellCommand(name='Store Credentials for Url %auth_url%',
+                                          command=['echo', auth_url, ">>", '$HOME/.git-credentials']))
     return auth_commands
