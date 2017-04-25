@@ -26,9 +26,11 @@ class RepoCredential(dict):
     def url(self):
         return self['url']
 
+    @property
     def user(self):
         return self['user']
 
+    @property
     def password(self):
         return self['password']
 
