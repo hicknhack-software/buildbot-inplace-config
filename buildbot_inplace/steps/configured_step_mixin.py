@@ -24,7 +24,6 @@ from buildbot_inplace.inplace_config import InplaceConfig, BuildbotYmlInvalid
 
 
 class ConfiguredStepMixin(CompositeStepMixin):
-
     def __init__(self):
         pass
 
@@ -35,17 +34,17 @@ class ConfiguredStepMixin(CompositeStepMixin):
             super(ConfiguredStepMixin, self).getResultSummary()
 
     @defer.inlineCallbacks
-    def getInplaceConfig(self):
+    def get_inplace_config(self):
         try:
-            inplace_text = yield self.getFileContentFromWorker(".buildbot.yml", abandonOnFailure=True)
+            inplace_text = yield self.getFileContentFromWorker('.buildbot.yml', abandonOnFailure=True)
         except BuildStepFailed as e:
-                self.descriptionDone = u"unable to fetch .buildbot.yml"
-                self.addCompleteLog(
-                    "error",
-                    "Please put a file named .buildbot.yml at the root of your repository:\n{0}".format(e))
-                self.addHelpLog()
-                raise
-        self.addCompleteLog(".buildbot.yml", inplace_text)
+            self.descriptionDone = u"unable to fetch .buildbot.yml"
+            self.addCompleteLog(
+                "error",
+                "Please put a file named .buildbot.yml at the root of your repository:\n{0}".format(e))
+            self.addHelpLog()
+            raise
+        self.addCompleteLog('.buildbot.yml', inplace_text)
 
         try:
             config = InplaceConfig.from_text(inplace_text)

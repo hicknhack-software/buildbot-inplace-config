@@ -15,7 +15,7 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
 
     @defer.inlineCallbacks
     def run(self):
-        inplace_config = yield self.getInplaceConfig()
+        inplace_config = yield self.get_inplace_config()
         profile = inplace_config.profile_named_get(self.build.properties['inplace_profile'])
         env = {}
 

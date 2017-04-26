@@ -39,7 +39,7 @@ class InplaceTriggerBuilds(Trigger, ConfiguredStepMixin):
 
     @defer.inlineCallbacks
     def run(self):
-        self.build_config = yield self.getInplaceConfig()
+        self.build_config = yield self.get_inplace_config()
         rv = yield super(InplaceTriggerBuilds, self).run()
         defer.returnValue(rv)
 
