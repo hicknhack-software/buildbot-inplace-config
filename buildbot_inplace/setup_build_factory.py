@@ -18,7 +18,7 @@ limitations under the License.
 """
 from buildbot.process.factory import BuildFactory
 from .steps.setup_build_steps import SetupBuildSteps
-from .steps.authenticate_checkout import create_authenticate_checkout_steps
+from .steps.authenticate_checkout import AuthenticateCheckoutStep
 from .steps.checkout import create_checkout_step
 
 
@@ -27,6 +27,6 @@ class SetupBuildFactory(BuildFactory):
 
     def __init__(self, config, project):
         BuildFactory.__init__(self, steps=[])
-        self.addSteps(create_authenticate_checkout_steps(project))
+        self.addStep(AuthenticateCheckoutStep(project))
         self.addStep(create_checkout_step(project))
         self.addStep(SetupBuildSteps(config))
