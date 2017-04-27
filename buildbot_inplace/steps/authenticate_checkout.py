@@ -111,8 +111,8 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
             self.commands.append(ShellArg(command='echo'))
 
         else:
-            self.commands.append(ShellArg('rm -f $HOME/.git-credentials'),
-                                 ShellArg('git config --global credential.helper store'))
+            self.commands.extend([ShellArg('rm -f $HOME/.git-credentials'),
+                                 ShellArg('git config --global credential.helper store')])
 
             for repo_credential in repo_credentials:
                 assert isinstance(repo_credential, RepoCredential)
