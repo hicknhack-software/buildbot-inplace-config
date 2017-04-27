@@ -104,7 +104,6 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
         self.project = project
         ShellSequence.__init__(self, commands=[], **kwargs)
 
-    @defer.inlineCallbacks
     def run(self):
         repo_credentials = self.project.repo_credentials
         if not repo_credentials:
@@ -121,4 +120,4 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
                 auth_url = set_url_auth(git_url=repo_credential.url, user=repo_credential.user,
                                         password=repo_credential.password)
                 self.commands.append(ShellArg('echo ' + auth_url + ' >> $HOME/.git-credentials'))
-        ShellSequence.run(self)
+        return super(AuthenticateCheckoutStep, self).run()
