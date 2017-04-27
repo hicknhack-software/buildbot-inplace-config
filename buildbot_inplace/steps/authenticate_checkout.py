@@ -102,6 +102,7 @@ class CmdWorkerCommands(WorkerCommands):
 class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
     def __init__(self, project=None, **kwargs):
         self.project = project
+        self.descriptionDone = u'Authentication finished!'
         ShellSequence.__init__(self, commands=[], **kwargs)
 
     def run(self):
