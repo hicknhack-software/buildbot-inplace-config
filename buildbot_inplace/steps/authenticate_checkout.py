@@ -56,6 +56,7 @@ class CmdWorkerCommands(WorkerCommands):
     def home_path_var(self):
         return '%HOMEPATH%'
 
+
 #
 # def get_worker_commands(worker_info):
 #     worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
@@ -110,8 +111,8 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
             self.commands.append(ShellArg(command='echo'))
 
         else:
-            self.commands.addpend(ShellArg('rm -f $HOME/.git-credentials'),
-                                  ShellArg('git config --global credential.helper store'))
+            self.commands.append(ShellArg('rm -f $HOME/.git-credentials'),
+                                 ShellArg('git config --global credential.helper store'))
 
             for repo_credential in repo_credentials:
                 assert isinstance(repo_credential, RepoCredential)
