@@ -20,8 +20,6 @@ from ..project import RepoCredential
 from buildbot.steps.shellsequence import ShellSequence, ShellArg
 from configured_step_mixin import ConfiguredStepMixin
 from checkout import set_url_auth
-from twisted.internet import defer
-
 
 class WorkerCommands(dict):
     @property
