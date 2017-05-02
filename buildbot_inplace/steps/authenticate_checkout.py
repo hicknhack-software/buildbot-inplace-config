@@ -79,6 +79,9 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
                 self.commands.append(ShellArg('echo ' + auth_url + ' >> $HOME/.git-credentials'))
         return super(AuthenticateCheckoutStep, self).run()
 
+    def start(self):
+        raise NotImplementedError("Use run()")
+
 
 class ClearCheckoutAuthenticationStep(ShellSequence):
     def __init__(self, **kwargs):
@@ -89,3 +92,6 @@ class ClearCheckoutAuthenticationStep(ShellSequence):
         self.commands.extend([ShellArg('rm -f $HOME/.git-credentials'),
                               ShellArg('git config --global --unset credential.helper')])
         return super(AuthenticateCheckoutStep, self).run()
+
+    def start(self):
+        raise NotImplementedError("Use run()")
