@@ -20,7 +20,7 @@ from ..project import RepoCredential
 from buildbot.steps.shellsequence import ShellSequence, ShellArg
 from configured_step_mixin import ConfiguredStepMixin
 from checkout import set_url_auth
-from ..utilities.command_utilities import get_worker_commands, WorkerCommands
+from ..utilities.command_utilities import get_worker_commands
 
 
 class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
@@ -37,7 +37,6 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
             self.commands.append(ShellArg(command=worker_commands.echo_command))
 
         else:
-            # 'rm -f $HOME/.git-credentials'
             credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
             remove_command = ' '.join([worker_commands.remove_command, credential_file])
             self.commands.extend([ShellArg(remove_command),
