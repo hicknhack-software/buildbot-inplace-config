@@ -20,39 +20,7 @@ from ..project import RepoCredential
 from buildbot.steps.shellsequence import ShellSequence, ShellArg
 from configured_step_mixin import ConfiguredStepMixin
 from checkout import set_url_auth
-
-class WorkerCommands(dict):
-    @property
-    def remove_command(self):
-        return ''
-
-    @property
-    def echo_command(self):
-        return 'echo'
-
-    @property
-    def home_path_var(self):
-        return ''
-
-
-class BashWorkerCommands(WorkerCommands):
-    @property
-    def remove_command(self):
-        return 'rm -f'
-
-    @property
-    def home_path_var(self):
-        return '$HOME'
-
-
-class CmdWorkerCommands(WorkerCommands):
-    @property
-    def remove_command(self):
-        return 'del'
-
-    @property
-    def home_path_var(self):
-        return '%HOMEPATH%'
+from ..utilities.command_utilities import get_worker_commands, WorkerCommands
 
 
 class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
@@ -63,11 +31,16 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
 
     def run(self):
         repo_credentials = self.project.repo_credentials
+        worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
+        worker_commands = get_worker_commands(worker_info=worker)
         if not repo_credentials:
-            self.commands.append(ShellArg(command='echo'))
+            self.commands.append(ShellArg(command=worker_commands.echo_command))
 
         else:
-            self.commands.extend([ShellArg('rm -f $HOME/.git-credentials'),
+            # 'rm -f $HOME/.git-credentials'
+            credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
+            remove_command = ' '.join([worker_commands.remove_command, credential_file])
+            self.commands.extend([ShellArg(remove_command),
                                   ShellArg('git config --global credential.helper store')])
 
             for repo_credential in repo_credentials:
@@ -76,7 +49,12 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
                     continue
                 auth_url = set_url_auth(git_url=repo_credential.url, user=repo_credential.user,
                                         password=repo_credential.password)
-                self.commands.append(ShellArg('echo ' + auth_url + ' >> $HOME/.git-credentials'))
+                echo_credentials_command = ' '.join([worker_commands.echo_command,
+                                                     auth_url,
+                                                     worker_commands.append_output_to_file,
+                                                     credential_file
+                                                     ])
+                self.commands.append(ShellArg(echo_credentials_command))
         return super(AuthenticateCheckoutStep, self).run()
 
     def start(self):
@@ -89,7 +67,14 @@ class ClearCheckoutAuthenticationStep(ShellSequence):
         super(ClearCheckoutAuthenticationStep, self).__init__(commands=[], **kwargs)
 
     def run(self):
-        self.commands.extend([ShellArg('rm -f $HOME/.git-credentials'),
+        worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
+        worker_commands = get_worker_commands(worker_info=worker)
+
+        # 'rm -f $HOME/.git-credentials'
+        credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
+        remove_command = ' '.join([worker_commands.remove_command, credential_file])
+
+        self.commands.extend([ShellArg(remove_command),
                               ShellArg('git config --global --unset credential.helper')])
         return super(AuthenticateCheckoutStep, self).run()
 
