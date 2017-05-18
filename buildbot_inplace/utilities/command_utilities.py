@@ -70,7 +70,7 @@ class WorkerCommands(dict):
         return '$HOME'
 
     def create_path_to(self, components):
-        return self.path_delimiter.join(components)
+        return self.directory_separator.join(components)
 
 
 class CmdWorkerCommands(WorkerCommands):
