@@ -63,7 +63,6 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
 
 class ClearCheckoutAuthenticationStep(ShellSequence):
     def __init__(self, config=None, **kwargs):
-        isinstance(config, )
         self.global_config = config
         self.descriptionDone = u'Authentication data cleared!'
         super(ClearCheckoutAuthenticationStep, self).__init__(commands=[], **kwargs)
