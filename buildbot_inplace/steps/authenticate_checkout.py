@@ -77,7 +77,7 @@ class ClearCheckoutAuthenticationStep(ShellSequence):
 
         self.commands.extend([ShellArg(remove_command),
                               ShellArg('git config --global --unset credential.helper')])
-        return super(AuthenticateCheckoutStep, self).run()
+        return super(ClearCheckoutAuthenticationStep, self).run()
 
     def start(self):
         raise NotImplementedError("Use run()")
