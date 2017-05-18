@@ -24,8 +24,9 @@ from ..utilities.command_utilities import get_worker_commands
 
 
 class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
-    def __init__(self, project=None, **kwargs):
+    def __init__(self, project=None, config=None, **kwargs):
         self.project = project
+        self.global_config = config
         self.descriptionDone = u'Authentication finished!'
         super(AuthenticateCheckoutStep, self).__init__(commands=[], **kwargs)
 
@@ -61,7 +62,9 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
 
 
 class ClearCheckoutAuthenticationStep(ShellSequence):
-    def __init__(self, **kwargs):
+    def __init__(self, config=None, **kwargs):
+        isinstance(config, )
+        self.global_config = config
         self.descriptionDone = u'Authentication data cleared!'
         super(ClearCheckoutAuthenticationStep, self).__init__(commands=[], **kwargs)
 
