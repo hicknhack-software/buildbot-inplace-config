@@ -113,4 +113,4 @@ class CmdWorkerCommands(WorkerCommands):
 
 def get_worker_commands(worker_info):
     assert isinstance(worker_info, Worker)
-    return WorkerCommands if worker_info.shell == 'bash' else CmdWorkerCommands()
+    return CmdWorkerCommands if worker_info.shell == 'cmd' else WorkerCommands()
