@@ -19,6 +19,7 @@ limitations under the License.
 from twisted.internet import defer
 from buildbot.process.buildstep import BuildStep, ShellMixin
 from buildbot.process.logobserver import LineConsumerLogObserver
+from ..utilities.command_utilities import get_worker_commands
 
 
 class EnvironmentParser:
@@ -51,26 +52,6 @@ class EnvironmentParser:
 class SetupStep(ShellMixin, BuildStep):
     """A Step that retrieves the environment after a command."""
 
-    SHELL_CONFIG = {
-        "cmd": dict(
-            path_delimiter=";",
-            cmd_delimiter="&",
-            start=["cmd", "/c"],
-            echo_env="set",
-            prefix="",
-            suffix=".bat",
-        ),
-        "bash": dict(
-            path_delimiter=":",
-            cmd_delimiter=";",
-            start=["bash", "-c"],
-            echo_env="env",
-            prefix=". ",
-            suffix=".sh",
-        )
-    }
-    FALLBACK_SHELL = "bash"
-
     def __init__(self, setup, config, env, **kwargs):
         self.setup = setup
         self.global_config = config
@@ -82,21 +63,15 @@ class SetupStep(ShellMixin, BuildStep):
     @defer.inlineCallbacks
     def run(self):
         worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
-        shell_config = self._shell_config(worker)
-        remote_cmd = self._command(worker, shell_config)
+        worker_commands = get_worker_commands(worker_info=worker)
+        remote_cmd = self._command(worker)
         cmd = yield self.makeRemoteShellCommand(command=remote_cmd, collectStdout=True, stdioLogName="envLog")
-        self.consumer = EnvironmentParser(self.env_dict, shell_config['path_delimiter'])
+        self.consumer = EnvironmentParser(self.env_dict, worker_commands.path_delimiter)
         self.addLogObserver('envLog', LineConsumerLogObserver(self.consumer.retrieve))
         yield self.runCommand(cmd)
         yield defer.returnValue(cmd.results())
 
-    def _shell_config(self, worker_info):
-        shell = worker_info.shell
-        if shell not in self.SHELL_CONFIG:
-            shell = self.FALLBACK_SHELL
-        return self.SHELL_CONFIG[shell]
-
-    def _command(self, worker_info, shell_config):
-        setup = ''.join([shell_config['prefix'], worker_info.setup_dir, self.setup, shell_config['suffix']])
-        shell = shell_config['start']
-        return shell + [shell_config['cmd_delimiter'].join([setup, shell_config['echo_env']])]
+    def _command(self, worker_info):
+        worker_commands = get_worker_commands(worker_info=worker_info)
+        setup = ''.join([worker_commands.script_prefix, worker_info.setup_dir, self.setup, worker_commands.script_suffix])
+        return worker_commands.shell_command + [worker_commands.command_delimiter.join([setup, worker_commands.env_command])]
