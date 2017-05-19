@@ -51,7 +51,7 @@ class WorkerCommands(dict):
 
     @property
     def remove_command(self):
-        return 'rm -r'
+        return 'rm -rf'
 
     @property
     def echo_command(self):
