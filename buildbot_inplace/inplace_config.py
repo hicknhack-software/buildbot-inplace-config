@@ -52,7 +52,16 @@ class Action(dict):
         return [key for key in self.keys() if key != 'name']
 
     def commands_for_key(self, key):
-        return flatten([self.get(key)])
+        commands = self.get(key)
+        if 'commands' in commands:
+            return flatten([commands.get('commands')])
+        return flatten([commands])
+
+    def products_for_key(self, key):
+        commands_dict = self.get(key)
+        if 'products' in commands_dict:
+            return flatten([commands_dict.get('products')])
+        return []
 
 
 class ProfileCommand:

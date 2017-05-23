@@ -50,6 +50,8 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                 self._add_step(ShellCommand(command=pc.commands[0], env=env, **shell_dict))
             else:
                 self._add_step(ShellSequence(pc.commands, env=env, **shell_dict))
+
+        # TODO add handling of products for each command
         defer.returnValue(SUCCESS)
 
     def start(self):
