@@ -74,6 +74,9 @@ class InplaceTriggerBuilds(Trigger, ConfiguredStepMixin):
 
         defer.returnValue(triggered_schedulers)
 
+    def start(self):
+        raise NotImplementedError("Use run()")
+
 
 class SpawnerBuildFactory(BuildFactory):
     """ A factory that provides Steps to checkout a repository, reads its configuration
