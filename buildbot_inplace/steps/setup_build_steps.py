@@ -26,6 +26,7 @@ from .configured_step_mixin import ConfiguredStepMixin
 
 
 class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
+    """A Composite Step that dynamically adds profile steps to run profile setups and build command steps."""
 
     def __init__(self, config, *args, **kwargs):
         self.global_config = config
@@ -40,19 +41,21 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
         for setup in profile.setups:
             desc = "Preparing %s" % setup
             prepare_dict = dict(name=desc, description=desc, descriptionDone=desc)
-            self._addStep(SetupStep(setup, config=self.global_config, env=env, **prepare_dict))
+            self._add_step(SetupStep(setup, config=self.global_config, env=env, **prepare_dict))
 
         profile_commands = inplace_config.profile_commands(profile)
         for pc in profile_commands:
             shell_dict = dict(name=pc.name, description=pc.name, descriptionDone=pc.name)
             if len(pc.commands) == 1:
-                self._addStep(ShellCommand(command=pc.commands[0], env=env, **shell_dict))
+                self._add_step(ShellCommand(command=pc.commands[0], env=env, **shell_dict))
             else:
-                self._addStep(ShellSequence(pc.commands, env=env, **shell_dict))
-
+                self._add_step(ShellSequence(pc.commands, env=env, **shell_dict))
         defer.returnValue(SUCCESS)
 
-    def _addStep(self, step):
+    def start(self):
+        raise NotImplementedError("Use run()")
+
+    def _add_step(self, step):
         build = self.build
         step.setBuild(build)
         step.setWorker(build.workerforbuilder.worker)
