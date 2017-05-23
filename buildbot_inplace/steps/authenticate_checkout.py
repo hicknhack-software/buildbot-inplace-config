@@ -24,6 +24,7 @@ from ..utilities.command_utilities import get_worker_commands
 
 
 class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
+    """A Step to store ensure authentication on source checkouts."""
     def __init__(self, project=None, config=None, **kwargs):
         self.project = project
         self.global_config = config
@@ -62,6 +63,7 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
 
 
 class ClearCheckoutAuthenticationStep(ShellSequence):
+    """A Step to clean up any temporary authentication information for source checkouts."""
     def __init__(self, config=None, **kwargs):
         self.global_config = config
         self.descriptionDone = u'Authentication data cleared!'

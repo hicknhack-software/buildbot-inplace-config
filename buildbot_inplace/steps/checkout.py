@@ -30,6 +30,7 @@ def set_url_auth(git_url, user, password):
 
 
 def create_checkout_step(project):
+    """Generate Checkout steps for the supplied project"""
     description = 'Checkout'
 
     repo_type = project.repo_type
