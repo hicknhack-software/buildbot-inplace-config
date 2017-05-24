@@ -29,6 +29,8 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
         self.project = project
         self.global_config = config
         self.descriptionDone = u'Authentication finished!'
+        self.name = u'Update Authentication'
+        self.description = u'Update Authentication'
         super(AuthenticateCheckoutStep, self).__init__(commands=[], **kwargs)
 
     def run(self):
@@ -67,6 +69,8 @@ class ClearCheckoutAuthenticationStep(ShellSequence):
     def __init__(self, config=None, **kwargs):
         self.global_config = config
         self.descriptionDone = u'Authentication data cleared!'
+        self.name = u'Clear Authentication'
+        self.description = u'Clear Authentication'
         super(ClearCheckoutAuthenticationStep, self).__init__(commands=[], **kwargs)
 
     def run(self):
