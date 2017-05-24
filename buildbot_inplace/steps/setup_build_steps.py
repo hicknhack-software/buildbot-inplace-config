@@ -52,10 +52,7 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
             else:
                 self._add_step(ShellSequence(pc.commands, env=env, **shell_dict))
             if pc.product:
-                upload_dict = dict(name='Upload ' + pc.product,
-                                   description='Uploading ' + pc.product,
-                                   descirptionDone='Uploaded ' + pc.product)
-                self._add_step(FileUpload(workersrc=pc.product, masterdest=pc.product, **upload_dict))
+                self._add_step(FileUpload(name='Upload ' + pc.product, workersrc=pc.product, masterdest=pc.product, **upload_dict))
         defer.returnValue(SUCCESS)
 
     def start(self):
