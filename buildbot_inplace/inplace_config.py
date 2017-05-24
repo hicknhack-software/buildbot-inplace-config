@@ -49,16 +49,19 @@ class Action(dict):
 
     @property
     def command_keys(self):
-        return [key for key in self.keys() if key != 'name' and not key.endswith('_product')]
+        return [key for key in self.keys() if key != 'name']
 
     def commands_for_key(self, key):
-        return flatten([self.get(key)])
+        commands = self.get(key)
+        if 'commands' in commands:
+            return flatten([commands.get('commands')])
+        return flatten([commands])
 
     def product_for_key(self, key):
-        product_key = key + '_product'
-        if product_key not in self:
-            return None
-        return self.get(key + '_product')
+        commands_dict = self.get(key)
+        if 'product' in commands_dict:
+            return commands_dict.get('product')
+        return None
 
 
 class ProfileCommand:
