@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from buildbot.process.buildstep import LoggingBuildStep, SUCCESS
-from buildbot.steps.shell import ShellCommand
+from buildbot.steps.shell import ShellCommand, SetPropertyFromCommand
 from buildbot.steps.shellsequence import ShellSequence
 from buildbot.steps.transfer import FileUpload
 from twisted.internet import defer
@@ -52,7 +52,10 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
             else:
                 self._add_step(ShellSequence(pc.commands, env=env, **shell_dict))
             if pc.product:
-                self._add_step(FileUpload(name='Upload ' + pc.product, workersrc=pc.product, masterdest=pc.product, **upload_dict))
+                self._add_step(FileUpload(name='Upload ' + pc.product, workersrc=pc.product, masterdest=pc.product))
+            if pc.product_command:
+                self._add_step(SetPropertyFromCommand(command=pc.product_command, property='product_file'))
+                # self._add_step(FileUpload(name='Upload ' + pc.product, workersrc=pc.product, masterdest=pc.product))
         defer.returnValue(SUCCESS)
 
     def start(self):
