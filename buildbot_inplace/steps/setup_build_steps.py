@@ -19,6 +19,7 @@ limitations under the License.
 from buildbot.process.buildstep import LoggingBuildStep, SUCCESS
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.shellsequence import ShellSequence
+from buildbot.steps.transfer import FileUpload
 from twisted.internet import defer
 
 from .setup import SetupStep
@@ -50,8 +51,8 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                 self._add_step(ShellCommand(command=pc.commands[0], env=env, **shell_dict))
             else:
                 self._add_step(ShellSequence(pc.commands, env=env, **shell_dict))
-
-        # TODO add handling of products for each command
+            if pc.product:
+                self._add_step(FileUpload(workersrc=pc.product, masterdest=pc.product))
         defer.returnValue(SUCCESS)
 
     def start(self):
