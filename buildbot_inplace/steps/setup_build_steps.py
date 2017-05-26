@@ -55,13 +55,13 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                 self._add_step(ShellSequence(pc.commands, env=env, **shell_dict))
 
             if pc.products:
-                self._add_step(MultipleFileUpload(name='Upload ' + pc.products,
+                self._add_step(MultipleFileUpload(name='Upload ' + ', '.join( pc.products),
                                                   workersrcs=pc.products,
                                                   masterdest='products'))
             if pc.products_command:
                 self._add_step(SetPropertyFromCommand(command=pc.product_command, property='product_file'))
                 product_files = flatten([Property('product_file')])
-                self._add_step(MultipleFileUpload(name='Upload ' + product_files,
+                self._add_step(MultipleFileUpload(name='Upload ' + ', '.join(product_files),
                                                   workersrcs=product_files,
                                                   masterdest='products'))
         defer.returnValue(SUCCESS)
