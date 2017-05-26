@@ -57,13 +57,14 @@ class Action(dict):
             return flatten([commands.get('commands')])
         return flatten([commands])
 
-    def product_for_key(self, key):
+    def products_for_key(self, key):
         commands_dict = self.get(key)
         if 'product' in commands_dict:
-            return commands_dict.get('product')
+            products = commands_dict.get('products')
+            return flatte([products])
         return None
 
-    def product_command_for_key(self, key):
+    def products_command_for_key(self, key):
         commands_dict = self.get(key)
         if 'product_command' in commands_dict:
             return commands_dict.get('product_command')
@@ -71,11 +72,12 @@ class Action(dict):
 
 
 class ProfileCommand:
-    def __init__(self, name, commands, product=None, product_command=None):
+    def __init__(self, name, commands, products=None, products_command=None):
         self.name = name
         self.commands = commands
-        self.product = product
-        self.product_command = product_command
+        self.products = products
+        self.products_command = products_command
+
 
 class InplaceConfig:
     def __init__(self, profiles, actions):
@@ -95,8 +97,8 @@ class InplaceConfig:
     def profile_commands(self, profile):
         all_commands = [ProfileCommand(name=action.name,
                                        commands=action.commands_for_key(profile.command_key),
-                                       product=action.product_for_key(profile.command_key),
-                                       product_command=action.product_command_for_key(profile.command_key))
+                                       products=action.products_for_key(profile.command_key),
+                                       products_command=action.products_command_for_key(profile.command_key))
                         for action in self.actions]
         return [cmd for cmd in all_commands if cmd.commands]
 

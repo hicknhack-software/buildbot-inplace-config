@@ -83,6 +83,12 @@ class Wrapper(dict):
     def projects(self):
         return self._projects
 
+    @property
+    def products_dir(self):
+        if 'products_dir' in self:
+            return self['products_dir']
+        return None
+
     def named_list(self, key):
         if key not in self:
             self[key] = NamedList()
