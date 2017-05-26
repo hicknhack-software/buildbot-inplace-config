@@ -38,7 +38,7 @@ class ConfiguredStepMixin(CompositeStepMixin):
         try:
             inplace_text = yield self.getFileContentFromWorker('.buildbot.yml', abandonOnFailure=True)
         except BuildStepFailed as e:
-            self.descriptionDone = u"unable to fetch .buildbot.yml"
+            self.descriptionDone = 'unable to fetch .buildbot.yml'
             self.addCompleteLog(
                 "error",
                 "Please put a file named .buildbot.yml at the root of your repository:\n{0}".format(e))
@@ -49,7 +49,7 @@ class ConfiguredStepMixin(CompositeStepMixin):
         try:
             config = InplaceConfig.from_text(inplace_text)
         except BuildbotYmlInvalid as e:
-            self.descriptionDone = u"bad .buildbot.yml"
+            self.descriptionDone = 'bad .buildbot.yml'
             self.addCompleteLog(
                 "error",
                 ".buildbot.yml is invalid:\n{0}".format(e))
