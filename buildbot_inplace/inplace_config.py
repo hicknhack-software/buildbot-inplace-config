@@ -59,15 +59,15 @@ class Action(dict):
 
     def products_for_key(self, key):
         commands_dict = self.get(key)
-        if 'product' in commands_dict:
+        if 'products' in commands_dict:
             products = commands_dict.get('products')
             return flatte([products])
         return None
 
     def products_command_for_key(self, key):
         commands_dict = self.get(key)
-        if 'product_command' in commands_dict:
-            return commands_dict.get('product_command')
+        if 'products_command' in commands_dict:
+            return commands_dict.get('products_command')
         return None
 
 
