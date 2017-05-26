@@ -61,7 +61,7 @@ class Action(dict):
         commands_dict = self.get(key)
         if 'products' in commands_dict:
             products = commands_dict.get('products')
-            return flatte([products])
+            return flatten([products])
         return None
 
     def products_command_for_key(self, key):
