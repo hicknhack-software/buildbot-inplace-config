@@ -6,14 +6,14 @@ This project tries to simplify the Buildbot master.cfg and enables each project 
 
 ## Usage
 
-You will need a version of Buildbot Nine, which is currently in active development and has no release so far.
-It has a new GUI and generally worked much better than the public Buildbot eight for us. Your experience may vary.
-
+This plugin requires Buildbot 0.9.x
 Download the files from this repository to your Buildbot master.
 
 Example master.cfg
 ```python
 # make buildbot_inplace available
+import sys
+sys.path.append('inplace')
 from buildbot_inplace import InplaceConfig
 
 # allow reconfiguration
@@ -59,11 +59,21 @@ setups: ['qt530_gcc490'] # name of setup tags which are also the script names ex
 For each project we need a trigger config file
 ```yaml
 name: 'Twofold-Qt' # project name used as basis for Buildbot builders
-repoType: 'git' # repository type (only git supported so far)
+repoType: 'git' # repository type (options: svn, git)
 repoUrl: 'https://github.com/hicknhack-software/Twofold-Qt.git'
+repoBranch: 'develop' # git only, HEAD is default.
 repoUser: ''
 repoPassword: ''
 ```
+
+If you need more complex authentication, for example on submodules you can supply these by adding them in the config as well. Currently, this only works for Git repositories.
+```yaml
+repoCredentials:
+	- url: 'https://github.com'
+	  user: 'username'
+	  password: 'password'
+```
+
 
 This should be all very straight forward.
 The real magic happens in the project. You just add a `.buildbot.yml` file to the root of your repository.
@@ -83,6 +93,24 @@ actions:
   std: 'make' # actions for the command key of the profile
   msvc: 'nmake.exe'
   mingw: 'mingw32-make.exe'
+
+# actions can define products that will be pushed back to the master
+# products can be a file name or a list of file
+- name: "Build Products"
+  std:
+  	commands: 'make'
+  	products: 'product.tar.gz'
+  mscv:
+  	commands: 'nmake.exe' 
+  	products:
+  		- 'productA.zip'
+  		- 'productB.zip'
+
+# for more complex products, a command that returns the list of files to stdout can be used
+- name: "Build Products"
+  std:
+  	commands: 'make'
+  	products_command: 'echo product.tar.gz'
 ```
 
 See "Twofold buildbot.yml":https://github.com/hicknhack-software/Twofold-Qt/blob/develop/.buildbot.yml for a complete example.
