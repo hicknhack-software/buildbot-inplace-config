@@ -28,10 +28,11 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
     def __init__(self, project=None, config=None, **kwargs):
         self.project = project
         self.global_config = config
-        self.name = 'Update Authentication'
-        self.description = 'Update Authentication'
-        self.descriptionDone = 'Authentication finished!'
-        super(AuthenticateCheckoutStep, self).__init__(commands=[], **kwargs)
+        super(AuthenticateCheckoutStep, self).__init__(commands=[],
+                                                       name='Update Authentication',
+                                                       description='SECRET',
+                                                       descriptionDone='STILLSECRET',
+                                                       **kwargs)
 
     def run(self):
         repo_credentials = self.project.repo_credentials
@@ -68,10 +69,11 @@ class ClearCheckoutAuthenticationStep(ShellSequence):
     """A Step to clean up any temporary authentication information for source checkouts."""
     def __init__(self, config=None, **kwargs):
         self.global_config = config
-        self.name = 'Clear Authentication'
-        self.description = 'Clear Authentication'
-        self.descriptionDone = 'Authentication data cleared!'
-        super(ClearCheckoutAuthenticationStep, self).__init__(commands=[], **kwargs)
+        super(ClearCheckoutAuthenticationStep, self).__init__(name='Clear Authentication',
+                                                              description='Clear Authentication',
+                                                              descriptionDone='Authentication data cleared!',
+                                                              commands=[],
+                                                              **kwargs)
 
     def run(self):
         worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
