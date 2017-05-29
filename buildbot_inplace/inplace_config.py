@@ -59,14 +59,14 @@ class Action(dict):
 
     def products_for_key(self, key):
         commands_dict = self.get(key)
-        if isinstance(dict, commands_dict) and 'products' in commands_dict:
+        if not isinstance(commands_dict, dict) and 'products' in commands_dict:
             products = commands_dict.get('products')
             return flatten([products])
         return None
 
     def products_command_for_key(self, key):
         commands_dict = self.get(key)
-        if isinstance(dict, commands_dict) and 'products_command' in commands_dict:
+        if isinstance(commands_dict, dict) and 'products_command' in commands_dict:
             return commands_dict.get('products_command')
         return None
 
