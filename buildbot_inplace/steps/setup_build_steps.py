@@ -31,7 +31,7 @@ def glob2list(rc, stdout, stderr):
     """Converts a string to a list of lines"""
     if rc == 0:
         return {'product_files': []}
-    product_files = [l.strip() for l in stdout.split('\n')]
+    product_files = [l.strip() for l in stdout.split('\n') if l.strip()]
     return {'product_files': product_files}
 
 
