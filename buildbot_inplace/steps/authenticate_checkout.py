@@ -51,7 +51,7 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
                 assert isinstance(repo_credential, RepoCredential)
                 if not repo_credential.url and not repo_credential.user and not repo_credential.password:
                     continue
-                auth_url = set_url_auth(git_url=repo_credential.url, user=repo_credential.user,
+                auth_url = set_url_auth(repo_url=repo_credential.url, user=repo_credential.user,
                                         password=repo_credential.password)
                 echo_credentials_command = ' '.join([worker_commands.echo_command,
                                                      auth_url,

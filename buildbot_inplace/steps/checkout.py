@@ -35,7 +35,7 @@ def create_checkout_step(project=None, only_config=False):
 
     repo_type = project.repo_type
     if repo_type == "git":
-        return Git(repourl=set_url_auth(project.repo_url, project.repo_user, project.repo_password),
+        return Git(repourl=set_url_auth(repo_url=project.repo_url, user=project.repo_user, password=project.repo_password),
                    branch=project.repo_branch,
                    mode='incremental',
                    submodules=not only_config,
