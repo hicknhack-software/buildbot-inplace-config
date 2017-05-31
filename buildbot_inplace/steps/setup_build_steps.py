@@ -66,7 +66,7 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
             if pc.products_command:
                 self._add_step(SetPropertyFromCommand(command=pc.products_command, extract_fn=glob2list))
                 self._add_step(MultipleFileUpload(name='Upload Products',
-                                                  workersrcs=Property('product_files'),
+                                                  workersrcs=self.getProperty('product_files'),
                                                   masterdest='products'))
         defer.returnValue(SUCCESS)
 
