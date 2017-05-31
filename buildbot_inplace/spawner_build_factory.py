@@ -88,7 +88,7 @@ class SpawnerBuildFactory(BuildFactory):
     def __init__(self, config, scheduler, project):
         super(SpawnerBuildFactory, self).__init__()
         self.addStep(AuthenticateCheckoutStep(project=project, config=config))
-        self.addStep(create_checkout_step(project=project))
+        self.addStep(create_checkout_step(project=project, only_config=True))
         self.addStep(ClearCheckoutAuthenticationStep(config=config))
         self.addStep(InplaceTriggerBuilds(config=config, project=project, scheduler=scheduler,
                                           updateSourceStamp=True,

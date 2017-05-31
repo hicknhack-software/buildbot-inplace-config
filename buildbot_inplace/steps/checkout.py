@@ -22,24 +22,24 @@ from buildbot.steps.source.svn import SVN
 from .success import ShowStepIfSuccessful
 
 
-def set_url_auth(git_url, user, password):
-    scheme, netloc, url, params, query, fragment = urlparse(git_url)
+def set_url_auth(repo_url, user, password):
+    scheme, netloc, url, params, query, fragment = urlparse(repo_url)
     if user and password:
         netloc = "%(user)s:%(password)s@%(netloc)s" % locals()
     return urlunparse((scheme, netloc, url, params, query, fragment))
 
 
-def create_checkout_step(project):
+def create_checkout_step(project=None, only_config=False):
     """Generate Checkout steps for the supplied project"""
-    description = 'Checkout'
+    description = 'Checkout' if not only_config else 'Checkout Buildbot config'
 
     repo_type = project.repo_type
     if repo_type == "git":
         return Git(repourl=set_url_auth(project.repo_url, project.repo_user, project.repo_password),
                    branch=project.repo_branch,
-                   mode='full',
-                   method='clobber',
-                   submodules=True,
+                   mode='incremental',
+                   submodules=not only_config,
+                   shallow=only_config,
                    name=description,
                    description=description,
                    descriptionDone=description,
