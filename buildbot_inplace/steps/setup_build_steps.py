@@ -21,11 +21,18 @@ from buildbot.process.properties import Property
 from buildbot.steps.shell import ShellCommand, SetPropertyFromCommand
 from buildbot.steps.shellsequence import ShellSequence
 from buildbot.steps.transfer import MultipleFileUpload
-from buildbot.util import flatten
 from twisted.internet import defer
 
 from .configured_step_mixin import ConfiguredStepMixin
 from .setup import SetupStep
+
+
+def glob2list(rc, stdout, stderr):
+    """Converts a string to a list of lines"""
+    if rc == 0:
+        return {'product_files': []}
+    product_files = [l.strip() for l in stdout.split('\n')]
+    return {'product_files': product_files}
 
 
 class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
@@ -59,10 +66,9 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                                                   workersrcs=pc.products,
                                                   masterdest='products'))
             if pc.products_command:
-                self._add_step(SetPropertyFromCommand(command=pc.products_command, property='product_file'))
-                product_files = flatten([Property('product_file')])
+                self._add_step(SetPropertyFromCommand(command=pc.products_command, extract_fn=glob2list))
                 self._add_step(MultipleFileUpload(name='Upload Products',
-                                                  workersrcs=product_files,
+                                                  workersrcs=Property('product_files'),
                                                   masterdest='products'))
         defer.returnValue(SUCCESS)
 
