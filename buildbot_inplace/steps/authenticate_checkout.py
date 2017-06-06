@@ -45,25 +45,22 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
             credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
             remove_command = ' '.join([worker_commands.remove_command, credential_file])
             self.commands.extend([ShellArg(remove_command),
-                                  ShellArg('git config --global credential.helper store')])
+                                  ShellArg(['git', 'config', '--global', 'credential.helper', 'store'])])
 
             for repo_credential in repo_credentials:
                 assert isinstance(repo_credential, RepoCredential)
                 if not repo_credential.url and not repo_credential.user and not repo_credential.password:
                     continue
+
                 auth_url = set_url_auth(repo_url=repo_credential.url, user=repo_credential.user,
                                         password=repo_credential.password)
-                echo_credentials_command = ' '.join([worker_commands.echo_command,
-                                                     auth_url,
-                                                     worker_commands.append_output_to_file,
-                                                     credential_file
-                                                     ])
-                self.commands.append(ShellArg(echo_credentials_command))
+
+                set_git_auth_script = worker_commands.create_path_to([worker.utilities_dir], 'add_git_credentials.py')
+                self.commands.append(ShellArg([worker_commands.python_command, set_git_auth_script, auth_url]))
         return super(AuthenticateCheckoutStep, self).run()
 
     def start(self):
         raise NotImplementedError("Use run()")
-
 
 class ClearCheckoutAuthenticationStep(ShellSequence):
     """A Step to clean up any temporary authentication information for source checkouts."""
@@ -79,12 +76,11 @@ class ClearCheckoutAuthenticationStep(ShellSequence):
         worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
         worker_commands = get_worker_commands(worker_info=worker)
 
-        # 'rm -f $HOME/.git-credentials'
         credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
         remove_command = ' '.join([worker_commands.remove_command, credential_file])
 
         self.commands.extend([ShellArg(remove_command),
-                              ShellArg('git config --global --unset credential.helper')])
+                              ShellArg(['git', 'config', '--global', '--unset', 'credential.helper'])])
         return super(ClearCheckoutAuthenticationStep, self).run()
 
     def start(self):

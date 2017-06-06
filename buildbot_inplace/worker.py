@@ -49,6 +49,10 @@ class Worker(dict):
         return _normalize_path(self['setupDir'])
 
     @property
+    def utilities_dir(self):
+        return _normalize_path(self['utilitiesDir'])
+
+    @property
     def platforms(self):
         return self['platforms']
 

@@ -16,9 +16,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from twisted.internet import defer
 from buildbot.process.buildstep import BuildStep, ShellMixin
 from buildbot.process.logobserver import LineConsumerLogObserver
+from twisted.internet import defer
+
 from ..utilities.command_utilities import get_worker_commands
 
 
@@ -73,5 +74,7 @@ class SetupStep(ShellMixin, BuildStep):
 
     def _command(self, worker_info):
         worker_commands = get_worker_commands(worker_info=worker_info)
-        setup = ''.join([worker_commands.script_prefix, worker_info.setup_dir, self.setup, worker_commands.script_suffix])
-        return worker_commands.shell_command + [worker_commands.command_delimiter.join([setup, worker_commands.env_command])]
+        setup = ''.join(
+            [worker_commands.script_prefix, worker_info.setup_dir, self.setup, worker_commands.script_suffix])
+        return worker_commands.shell_command + [
+            worker_commands.command_delimiter.join([setup, worker_commands.env_command])]
