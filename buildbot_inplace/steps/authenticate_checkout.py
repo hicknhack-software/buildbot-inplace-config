@@ -62,6 +62,7 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
     def start(self):
         raise NotImplementedError("Use run()")
 
+
 class ClearCheckoutAuthenticationStep(ShellSequence):
     """A Step to clean up any temporary authentication information for source checkouts."""
     def __init__(self, config=None, **kwargs):
@@ -80,7 +81,7 @@ class ClearCheckoutAuthenticationStep(ShellSequence):
         remove_command = ' '.join([worker_commands.remove_command, credential_file])
 
         self.commands.extend([ShellArg(remove_command),
-                              ShellArg(['git', 'config', '--global', '--unset', 'credential.helper'])])
+                              ShellArg(['git', 'config', '--global', '--remove-section', 'credential'])])
         return super(ClearCheckoutAuthenticationStep, self).run()
 
     def start(self):
