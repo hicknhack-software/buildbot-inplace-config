@@ -56,7 +56,8 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
                                         password=repo_credential.password)
 
                 set_git_auth_script = worker_commands.create_path_to([worker.utilities_dir, 'add_git_credentials.py'])
-                self.commands.append(ShellArg([worker_commands.python_command, set_git_auth_script, auth_url]))
+                add_auth_command = ' '.join([worker_commands.python_command, set_git_auth_script, auth_url])
+                self.commands.append(ShellArg(add_auth_command))
         return super(AuthenticateCheckoutStep, self).run()
 
     def start(self):
