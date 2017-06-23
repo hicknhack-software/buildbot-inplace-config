@@ -22,13 +22,14 @@ from twisted.python import log
 from yaml import safe_load
 from buildbot.worker import Worker as BuildbotWorker
 from pprint import pformat
+from re import sub
 
 
 def _normalize_path(p):
     s = p.replace("\\", "/")
     if s[-1] is not "/":
         s += "/"
-    return s
+    return sub('/+', '/', s)
 
 
 class Worker(dict):
