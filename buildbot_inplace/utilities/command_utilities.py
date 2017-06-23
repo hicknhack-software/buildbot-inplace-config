@@ -42,6 +42,10 @@ class WorkerCommands(dict):
         return 'env'
 
     @property
+    def python_command(self):
+        return 'python'
+
+    @property
     def script_prefix(self):
         return '. '
 
