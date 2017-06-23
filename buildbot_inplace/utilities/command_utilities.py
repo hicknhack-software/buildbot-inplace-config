@@ -18,7 +18,7 @@ limitations under the License.
 """
 
 from ..worker import Worker
-
+from re import sub
 
 class WorkerCommands(dict):
     @property
@@ -74,7 +74,7 @@ class WorkerCommands(dict):
         return '$HOME'
 
     def create_path_to(self, components):
-        return self.directory_separator.join(components)
+        return sub(self.directory_separator + '+', self.directory_separator, self.directory_separator.join(components))
 
 
 class CmdWorkerCommands(WorkerCommands):
