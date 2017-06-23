@@ -84,7 +84,7 @@ class CmdWorkerCommands(WorkerCommands):
 
     @property
     def directory_separator(self):
-        return '\\'
+        return r'\\'
 
     @property
     def command_delimiter(self):
