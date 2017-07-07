@@ -21,6 +21,7 @@ from buildbot.process.properties import Property
 from buildbot.steps.shell import ShellCommand, SetPropertyFromCommand
 from buildbot.steps.shellsequence import ShellSequence
 from buildbot.steps.transfer import MultipleFileUpload
+from buildbot.util import flatten
 from twisted.internet import defer
 
 from .configured_step_mixin import ConfiguredStepMixin
@@ -60,13 +61,15 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                 self._add_step(ShellSequence(pc.commands, env=env, **shell_dict))
 
             if pc.products:
-                self._add_step(MultipleFileUpload(name='Upload Products',
+                self._add_step(MultipleFileUpload(name='Upload products \'' + ', '.join(flatten([pc.products])) + '\'',
                                                   workersrcs=pc.products,
                                                   masterdest='products'))
+
             if pc.products_command:
-                self._add_step(SetPropertyFromCommand(command=pc.products_command, extract_fn=glob2list))
-                self._add_step(ShellCommand(name="Print Property", command=['echo', Property('product_files')]))
-                self._add_step(MultipleFileUpload(name='Upload Products',
+                self._add_step(SetPropertyFromCommand(name='Set property from command \'' + pc.products_command + '\'',
+                                                      command=pc.products_command,
+                                                      extract_fn=glob2list))
+                self._add_step(MultipleFileUpload(name='Upload products from command \'' + pc.products_command + '\'',
                                                   workersrcs=Property('product_files'),
                                                   masterdest='products'))
         defer.returnValue(SUCCESS)
