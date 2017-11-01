@@ -21,10 +21,14 @@ import random
 from buildbot.config import BuilderConfig
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.triggerable import Triggerable
+from buildbot.www.auth import UserPasswordAuth
+
 
 from .project import Project
 from .setup_build_factory import SetupBuildFactory
 from .spawner_build_factory import SpawnerBuildFactory
+from .user import User
+from .role import Role
 from .worker import Worker
 
 
@@ -58,6 +62,8 @@ class Wrapper(dict):
         super(Wrapper, self).__init__(**kwargs)
         self._inplace_workers = NamedList()
         self._projects = NamedList()
+        self._users = NamedList()
+        self._roles = NamedList()
 
     @property
     def builders(self):
@@ -83,6 +89,14 @@ class Wrapper(dict):
     def projects(self):
         return self._projects
 
+    @property
+    def users(self):
+        return self._users
+
+    @property
+    def roles(self):
+        return self._roles
+
     def named_list(self, key):
         if key not in self:
             self[key] = NamedList()
@@ -94,11 +108,19 @@ class Wrapper(dict):
     def load_projects(self, path):
         Project.load(path, self.projects)
 
+    def load_users(self, path):
+        User.load(path, self.users)
+        Role.load(path, self.roles)
+        self.setup_users()
+
     def project_profile_worker_names(self, profile):
         return [worker.name
                 for worker in self.inplace_workers
                 if set(profile.setups).issubset(set(worker.setups))
                 and profile.platform in worker.platforms]
+
+    def setup_users(self):
+        self['www']['auth'] = UserPasswordAuth(dict([(u.name, u.password) for u in self.users]))
 
     def setup_inplace(self):
         self.builders.clear()
