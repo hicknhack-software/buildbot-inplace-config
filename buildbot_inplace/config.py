@@ -22,6 +22,9 @@ from buildbot.config import BuilderConfig
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.triggerable import Triggerable
 from buildbot.www.auth import UserPasswordAuth
+from buildbot.www.authz.authz import Authz
+from buildbot.www.authz.roles import RolesFromUsername
+from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
 
 
 from .project import Project
@@ -120,7 +123,18 @@ class Wrapper(dict):
                 and profile.platform in worker.platforms]
 
     def setup_users(self):
+        # load users
         self['www']['auth'] = UserPasswordAuth(dict([(u.name, u.password) for u in self.users]))
+        roleMatchers = []
+        allowRules = []
+        for user in self.users:
+            roleMatchers.append(RolesFromUsername(roles=user.roles, usernames=[user.name]))
+        for role in self.roles:
+            if 'any' in role.capabilities:
+                allowRules.append(AnyEndpointMatcher(role=role.name))
+        allowRules.append(AnyEndpointMatcher(role='nobody'))
+        self['www']['authz'] = Authz(allowRules=allowRules, roleMatchers=roleMatchers)
+
 
     def setup_inplace(self):
         self.builders.clear()
