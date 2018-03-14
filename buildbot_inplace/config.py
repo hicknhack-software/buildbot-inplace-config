@@ -130,7 +130,7 @@ class Wrapper(dict):
         for user in self.users:
             roleMatchers.append(RolesFromUsername(roles=user.roles, usernames=[user.name]))
         for role in self.roles:
-            if 'any' in role.capabilities:
+            if 'all' in role.capabilities:
                 allowRules.append(AnyEndpointMatcher(role=role.name))
         allowRules.append(AnyEndpointMatcher(role='nobody'))
         self['www']['authz'] = Authz(allowRules=allowRules, roleMatchers=roleMatchers)
