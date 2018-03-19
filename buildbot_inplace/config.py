@@ -25,6 +25,10 @@ from buildbot.www.auth import UserPasswordAuth
 from buildbot.www.authz.authz import Authz
 from buildbot.www.authz.roles import RolesFromUsername
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
+from buildbot.www.authz.endpointmatchers import EnableSchedulerEndpointMatcher
+from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
+from buildbot.www.authz.endpointmatchers import RebuildBuildEndpointMatcher
+from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
 
 
 from .project import Project
@@ -123,18 +127,25 @@ class Wrapper(dict):
                 and profile.platform in worker.platforms]
 
     def setup_users(self):
-        # load users
         self['www']['auth'] = UserPasswordAuth(dict([(u.name, u.password) for u in self.users]))
-        roleMatchers = []
-        allowRules = []
+        role_matcher = []
+        allow_rules = []
         for user in self.users:
-            roleMatchers.append(RolesFromUsername(roles=user.roles, usernames=[user.name]))
+            role_matcher.append(RolesFromUsername(roles=user.roles, usernames=[user.name]))
         for role in self.roles:
             if 'all' in role.capabilities:
-                allowRules.append(AnyEndpointMatcher(role=role.name))
-        allowRules.append(AnyEndpointMatcher(role='nobody'))
-        self['www']['authz'] = Authz(allowRules=allowRules, roleMatchers=roleMatchers)
-
+                allow_rules.append(AnyEndpointMatcher(role=role.name, defaultDeny=False))
+            if 'build' in role.capabilities or 'force_build' in role.capabilities:
+                allow_rules.append(ForceBuildEndpointMatcher(role=role.name))
+            if 'build' in role.capabilities or 'stop_build' in role.capabilities:
+                allow_rules.append(StopBuildEndpointMatcher(role=role.name))
+            if 'build' in role.capabilities or 'rebuild' in role.capabilities:
+                allow_rules.append(RebuildBuildEndpointMatcher(role=role.name))
+            if 'schedule' in role.capabilities:
+                allow_rules.append(EnableSchedulerEndpointMatcher(role=role.name))
+        # make sure to add a catch-all to disable anonymous access
+        allow_rules.append(AnyEndpointMatcher(role='nobody'))
+        self['www']['authz'] = Authz(allowRules=allow_rules, roleMatchers=role_matcher)
 
     def setup_inplace(self):
         self.builders.clear()

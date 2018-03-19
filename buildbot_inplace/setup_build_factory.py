@@ -27,7 +27,9 @@ class SetupBuildFactory(BuildFactory):
 
     def __init__(self, config, project):
         BuildFactory.__init__(self, steps=[])
-        self.addStep(AuthenticateCheckoutStep(project=project, config=config))
+        if project.repo_type == "git":
+            self.addStep(AuthenticateCheckoutStep(project=project, config=config))
         self.addStep(create_checkout_step(project=project))
-        self.addStep(ClearCheckoutAuthenticationStep(config=config))
+        if project.repo_type == "git":
+            self.addStep(ClearCheckoutAuthenticationStep(config=config))
         self.addStep(SetupBuildSteps(config=config))

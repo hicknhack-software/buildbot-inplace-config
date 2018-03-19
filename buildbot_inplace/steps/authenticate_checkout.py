@@ -24,14 +24,14 @@ from ..utilities.command_utilities import get_worker_commands
 
 
 class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
-    """A Step to store ensure authentication on source checkouts."""
+    """A Step to store authentication on source checkouts."""
     def __init__(self, project=None, config=None, **kwargs):
         self.project = project
         self.global_config = config
         super(AuthenticateCheckoutStep, self).__init__(commands=[],
                                                        name='Update Authentication',
                                                        description='SECRET',
-                                                       descriptionDone='STILLSECRET',
+                                                       descriptionDone='SECRET',
                                                        **kwargs)
 
     def run(self):
