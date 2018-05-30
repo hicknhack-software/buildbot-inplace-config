@@ -36,8 +36,8 @@ class User(dict):
         return self['password']
 
     @property
-    def roles(self):
-        return self['roles']
+    def capabilities(self):
+        return self['capabilities']
 
     @staticmethod
     def load(users_dir, users):
