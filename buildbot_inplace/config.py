@@ -130,17 +130,20 @@ class Wrapper(dict):
         role_matcher = []
         allow_rules = []
         for user in self.users:
-            role_matcher.append(RolesFromUsername(roles=[user.name], usernames=[user.name]))
-            if 'all' in user.capabilities:
-                allow_rules.append(AnyEndpointMatcher(role=user.name, defaultDeny=False))
-            if 'build' in user.capabilities or 'force_build' in user.capabilities:
-                allow_rules.append(ForceBuildEndpointMatcher(role=user.name))
-            if 'build' in user.capabilities or 'stop_build' in user.capabilities:
-                allow_rules.append(StopBuildEndpointMatcher(role=user.name))
-            if 'build' in user.capabilities or 'rebuild' in user.capabilities:
-                allow_rules.append(RebuildBuildEndpointMatcher(role=user.name))
-            if 'schedule' in user.capabilities:
-                allow_rules.append(EnableSchedulerEndpointMatcher(role=user.name))
+            role_matcher.append(RolesFromUsername(roles=user.capabilities, usernames=[user.name]))
+
+        allow_rules.append(AnyEndpointMatcher(role='all', defaultDeny=False))
+        allow_rules.append(ForceBuildEndpointMatcher(role='build'))
+        allow_rules.append(ForceBuildEndpointMatcher(role='force_build'))
+
+        allow_rules.append(StopBuildEndpointMatcher(role='build'))
+        allow_rules.append(StopBuildEndpointMatcher(role='stop_build'))
+
+        allow_rules.append(RebuildBuildEndpointMatcher(role='build'))
+        allow_rules.append(RebuildBuildEndpointMatcher(role='rebuild'))
+
+        allow_rules.append(EnableSchedulerEndpointMatcher(role='schedule'))
+
         # make sure to add a catch-all to disable anonymous access
         allow_rules.append(AnyEndpointMatcher(role='nobody'))
         self['www']['authz'] = Authz(allowRules=allow_rules, roleMatchers=role_matcher)
