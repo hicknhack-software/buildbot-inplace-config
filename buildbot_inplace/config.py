@@ -21,6 +21,9 @@ import random
 from buildbot.config import BuilderConfig
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.triggerable import Triggerable
+from buildbot.schedulers.basic import SingleBranchScheduler
+from buildbot.changes.filter import ChangeFilter
+from buildbot.plugins import changes
 from buildbot.www.auth import UserPasswordAuth
 from buildbot.www.authz.authz import Authz
 from buildbot.www.authz.roles import RolesFromUsername
@@ -147,12 +150,60 @@ class Wrapper(dict):
         allow_rules.append(AnyEndpointMatcher(role='nobody'))
         self['www']['authz'] = Authz(allowRules=allow_rules, roleMatchers=role_matcher)
 
+    def setup_git_triggers(self):
+        # Allow triggering through HTTP API at /change_hook
+        self['www']['change_hook_dialects'] = {'base': True}
+
+        for project in self.projects:
+            # Also regularly poll the repository (e.g. in case buildhost was shut down)
+            
+            workdir = './gitpoller-workdir/' + project.name
+            self.change_source.append(changes.GitPoller(
+                repourl=project.repo_url,
+                branches=[project.repo_branch],
+                pollAtLaunch=True,
+                project=project.name,
+                workdir=workdir
+            ))
+
+            # Manually add and configure git credential store
+            from subprocess import Popen
+            from os.path import expanduser
+
+            git_cred_path = expanduser("~/.git-credentials")
+            Popen(["git", "init", "--bare", workdir])
+            try:
+                credlines = set(open(git_cred_path).readlines())
+            except IOError:
+                credlines = set()
+
+            # Prepare the GitPoller workdir with credentials
+            for cred in project.repo_credentials:    
+                Popen(["git", "config","credential. " + cred.url + "username", cred.user], cwd=workdir)
+                Popen(["git", "config","credential.helper", "store"], cwd=workdir)
+
+                scheme, uri = cred.url.split("//")
+                credlines.add(scheme + "//" + cred.user + ":" + cred.password + "@" + uri + '\n')
+
+            open(git_cred_path, "w").writelines(credlines)
+
+            # Register a scheduler that reacts to changes on the repository
+            git_scheduler = SingleBranchScheduler(
+                name="Git-%s" % project.name,
+                builderNames=[project.name],
+                change_filter=ChangeFilter(branch=project.repo_branch))
+
+            self.schedulers.named_set(git_scheduler)
+      
+
     def setup_inplace(self):
         self.builders.clear()
         self.schedulers.clear()
         worker_names = self.inplace_workers.names
 
         def pick_next_worker(_, worker_pool, build):
+            if 'inplace_platform' not in build.properties:
+                return
             platform = build.properties['inplace_platform']
             setups = set(build.properties['inplace_setups'])
 
@@ -187,4 +238,4 @@ class Wrapper(dict):
             self.builders.named_set(inplace_builder_config)
             self.schedulers.named_set(inplace_scheduler)
 
-            # TODO: add git triggers
+        self.setup_git_triggers()
