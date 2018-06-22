@@ -51,6 +51,15 @@ class Action(dict):
     def command_keys(self):
         return [key for key in self.keys() if key != 'name']
 
+    @property
+    def redmine_upload(self):
+        if 'redmine_upload' not in self:
+            print("redmine_upload is None")
+            return None
+        
+        print("redmine_upload is None", self['redmine_upload'])
+        return self['redmine_upload']
+
     def commands_for_key(self, key):
         commands = self.get(key)
         if isinstance(commands, dict) and 'commands' in commands:
@@ -71,12 +80,14 @@ class Action(dict):
         return None
 
 
+
 class ProfileCommand:
-    def __init__(self, name, commands, products=None, products_command=None):
+    def __init__(self, name, commands, products=None, products_command=None, redmine_upload=None):
         self.name = name
         self.commands = commands
         self.products = products
         self.products_command = products_command
+        self.redmine_upload = redmine_upload
 
 
 class InplaceConfig:
@@ -98,7 +109,8 @@ class InplaceConfig:
         all_commands = [ProfileCommand(name=action.name,
                                        commands=action.commands_for_key(profile.command_key),
                                        products=action.products_for_key(profile.command_key),
-                                       products_command=action.products_command_for_key(profile.command_key))
+                                       products_command=action.products_command_for_key(profile.command_key),
+                                       redmine_upload=action.redmine_upload)
                         for action in self.actions]
         return [cmd for cmd in all_commands if cmd.commands]
 

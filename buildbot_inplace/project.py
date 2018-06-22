@@ -34,7 +34,6 @@ class RepoCredential(dict):
     def password(self):
         return self['password']
 
-
 class Project(dict):
     @property
     def name(self):
@@ -72,6 +71,18 @@ class Project(dict):
             return []
         repo_credentials = self['repoCredentials']
         return [RepoCredential(**credential_dict) for credential_dict in repo_credentials]
+
+    @property
+    def redmine_url(self):
+        return self['redmineUrl']
+
+    @property
+    def redmine_username(self):
+        return self['redmineUser']
+
+    @property
+    def redmine_password(self):
+        return self['redminePassword']
 
     @property
     def inplace(self):

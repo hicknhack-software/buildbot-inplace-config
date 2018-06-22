@@ -26,6 +26,7 @@ from twisted.internet import defer
 
 from .configured_step_mixin import ConfiguredStepMixin
 from .setup import SetupStep
+from .redmine_upload import RedmineUpload
 
 
 def glob2list(rc, stdout, stderr):
@@ -60,18 +61,37 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
             else:
                 self._add_step(ShellSequence(pc.commands, env=env, **shell_dict))
 
-            if pc.products:
+            print "SetupBuildSteps pc.redmine=%s" % pc.redmine_upload
+
+            masterdest = 'products/' + self.build.properties['inplace_project']
+            project = self.global_config.projects.named_get(self.build.properties['inplace_project'])
+
+            if pc.products and pc.redmine_upload:
                 self._add_step(MultipleFileUpload(name='Upload products \'' + ', '.join(flatten([pc.products])) + '\'',
                                                   workersrcs=pc.products,
-                                                  masterdest='products'))
+                                                  masterdest=masterdest))
 
-            if pc.products_command:
+                self._add_step(RedmineUpload(name='Upload products to Redmine',
+                    project=project,
+                    products=pc.products,
+                    product_dir=masterdest,
+                    redmine_identifier=pc.redmine_upload
+                ))
+
+            if pc.products_command and pc.redmine_upload:
                 self._add_step(SetPropertyFromCommand(name='Set property from command \'' + pc.products_command + '\'',
                                                       command=pc.products_command,
                                                       extract_fn=glob2list))
                 self._add_step(MultipleFileUpload(name='Upload products from command \'' + pc.products_command + '\'',
                                                   workersrcs=Property('product_files'),
-                                                  masterdest='products'))
+                                                  masterdest=masterdest))
+                self._add_step(RedmineUpload(name='Upload products to Redmine',
+                    project=project,
+                    products=Property('product_files'),
+                    product_dir=masterdest,
+                    redmine_identifier=pc.redmine_upload,
+                ))
+
         defer.returnValue(SUCCESS)
 
     def start(self):
