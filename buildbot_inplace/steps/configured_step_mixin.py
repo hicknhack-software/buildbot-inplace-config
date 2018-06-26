@@ -33,6 +33,7 @@ class ConfiguredStepMixin(CompositeStepMixin):
         else:
             super(ConfiguredStepMixin, self).getResultSummary()
 
+
     @defer.inlineCallbacks
     def get_inplace_config(self):
         try:
@@ -42,7 +43,7 @@ class ConfiguredStepMixin(CompositeStepMixin):
             self.addCompleteLog(
                 "error",
                 "Please put a file named .buildbot.yml at the root of your repository:\n{0}".format(e))
-            self.addHelpLog()
+            #self.addHelpLog()
             raise
         self.addCompleteLog('.buildbot.yml', inplace_text)
 
@@ -53,6 +54,6 @@ class ConfiguredStepMixin(CompositeStepMixin):
             self.addCompleteLog(
                 "error",
                 ".buildbot.yml is invalid:\n{0}".format(e))
-            self.addHelpLog()
+            #self.addHelpLog()
             raise
         defer.returnValue(config)
