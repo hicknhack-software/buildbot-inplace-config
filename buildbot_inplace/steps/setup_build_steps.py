@@ -57,11 +57,9 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
         for pc in profile_commands:
             shell_dict = dict(name=pc.name, description=pc.name, descriptionDone=pc.name)
             if len(pc.commands) == 1:
-                self._add_step(ShellCommand(command=pc.commands[0], env=env, **shell_dict))
+                self._add_step(ShellCommand(command=pc.commands[0], env=env, haltOnFailure=True, **shell_dict))
             else:
-                self._add_step(ShellSequence(pc.commands, env=env, **shell_dict))
-
-            print "SetupBuildSteps pc.redmine=%s" % pc.redmine_upload
+                self._add_step(ShellSequence(pc.commands, env=env, haltOnFailure=True, **shell_dict))
 
             masterdest = 'products/' + self.build.properties['inplace_project']
             project = self.global_config.projects.named_get(self.build.properties['inplace_project'])
