@@ -58,18 +58,19 @@ class RedmineUpload(BuildStep):
 
 	renderables = ['products']
 
-	def __init__(self, project, products, product_dir, redmine_identifier, *args, **kwargs):
+	def __init__(self, project, products, product_dir, deploy_config, *args, **kwargs):
 		self.project = project
 		self.products = products
 		self.product_dir = product_dir
-        #super(RedmineUpload, self).__init__(*args, **kwargs)
+
 		BuildStep.__init__(self, *args, **kwargs)
 
+		self.deploy_config = deploy_config
+
 		self.redmine_url = project.redmine_url
-		self.redmine_identifier = redmine_identifier
-		
 		self.auth_header = [b"Basic " + b64encode(b"{}:{}".format(project.redmine_username, project.redmine_password))]
 
+	@defer.inlineCallbacks
 	def _upload_file(self, file):
 		header = Headers({
 			'Content-Type': ['application/octet-stream'],
@@ -79,7 +80,39 @@ class RedmineUpload(BuildStep):
 		agent = Agent(reactor)
 		producer = FileBodyProducer(file)
 
-		return agent.request('POST', self.redmine_url + '/uploads.json', header, producer)
+		response = yield agent.request('POST', self.redmine_url + '/uploads.json', header, producer)
+		responseBody = yield readBody(response)
+		defer.returnValue(json.loads(responseBody)["upload"]["token"])
+
+	@defer.inlineCallbacks
+	def _get_version_id(self):
+		if self.deploy_config.version is None:
+			defer.returnValue(None)
+			return
+		try:
+			id = int(self.deploy_config.version)
+			defer.returnValue(id)
+			return
+		except ValueError:
+			pass
+
+		header = Headers({
+			'Content-Type': ['application/json'],
+			'authorization' : self.auth_header,
+		})
+		agent = Agent(reactor)
+		url = self.redmine_url + "/projects/" + self.deploy_config.project + "/versions.json"
+
+		version_name = self.deploy_config.version
+
+		response = yield agent.request('GET', url, header)
+		responseBody = yield readBody(response)
+		for version in json.loads(responseBody)["versions"]:
+			if version["name"] == version_name:
+				defer.returnValue(version.id)
+				return
+		
+		defer.returnValue(None)
 
 	@defer.inlineCallbacks
 	def _check_filename_available(self, filename):
@@ -90,7 +123,7 @@ class RedmineUpload(BuildStep):
 		
 		agent = Agent(reactor)
 
-		url = self.redmine_url + "/projects/" + self.redmine_identifier + "/files.json"
+		url = self.redmine_url + "/projects/" + self.deploy_config.project + "/files.json"
 		response = yield agent.request('GET', url, header)
 		responseBody = yield readBody(response)
 		for file in json.loads(responseBody)["files"]:
@@ -99,6 +132,7 @@ class RedmineUpload(BuildStep):
 
 		defer.returnValue(True)
 
+	@defer.inlineCallbacks
 	def _upload_token(self, filename, token):
 		header = Headers({
 			'Content-Type': ['application/json'],
@@ -107,17 +141,21 @@ class RedmineUpload(BuildStep):
 		
 		agent = Agent(reactor)
 
+		version_id = yield self._get_version_id()
+
 		upload = json.dumps(
 		{ "file" : {
 			"token": token,
 			"filename": filename,
+			"version_id": version_id,
 			#description:
-			#version_id:
 		}})
 
 		producer = StringProducer(upload)
-		url = self.redmine_url + "/projects/" + self.redmine_identifier + "/files.json"
-		return agent.request('POST', url, header, producer)
+		url = self.redmine_url + "/projects/" + self.deploy_config.project + "/files.json"
+		response = yield agent.request('POST', url, header, producer)
+		responseBody = yield readBody(response)
+		defer.returnValue(responseBody)
 
 
 	@defer.inlineCallbacks
@@ -129,29 +167,27 @@ class RedmineUpload(BuildStep):
 		
 		for product in self.products:
 			try:
-				buildnumber = self.getProperty('buildnumber')
 				filename = os.path.basename(product)
-				base, ext = os.path.splitext(filename)
-				filename_versioned = "%s-%s%s" % (base, buildnumber, ext)
+				local_filename = filename
+				if self.deploy_config.append_buildnumber:
+					buildnumber = self.getProperty('buildnumber')
+					base, ext = os.path.splitext(filename)
+					filename = "%s-%s%s" % (base, buildnumber, ext)
 
-				with open(os.path.join(self.product_dir, filename), "rb") as f:
-					log.addContent("Checking for filename \"%s\" on server...\n" % filename_versioned)
-					available = yield self._check_filename_available(filename_versioned)
+				with open(os.path.join(self.product_dir, local_filename), "rb") as f:
+					log.addContent("Checking for filename \"%s\" on server...\n" % filename)
+					available = yield self._check_filename_available(filename)
 					if not available:
-						log.addContent("File \"%s\" already exists, skipping...\n" % filename_versioned)
+						log.addContent("File \"%s\" already exists, skipping...\n" % filename)
 						continue
 					
 					skipped = False
 
-					log.addContent("Uploading File %s\n" % filename_versioned)
-					response = yield self._upload_file(f)
-					# except/errcallback if this is not 20X
-					responseBody = yield readBody(response)
-					print "Got HTTP Response %s\n" % responseBody
-					token = json.loads(responseBody)["upload"]["token"]
-					log.addContent("Uploaded File %s, spawned token %s\n" % (filename_versioned, token))
+					log.addContent("Uploading File %s\n" % filename)
+					token  = yield self._upload_file(f)
+					log.addContent("Uploaded File %s, spawned token %s\n" % (filename, token))
 
-					yield self._upload_token(filename_versioned, token)
+					yield self._upload_token(filename, token)
 			except IOError, e:
 				if e.errno == errno.EISDIR:
 					log.addContent("Skipping directory %s\n" % product)

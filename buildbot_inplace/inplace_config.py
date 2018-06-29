@@ -41,6 +41,21 @@ class Profile(dict):
     def setups(self):
         return flatten([self.get('setups', self.get('setup', []))])
 
+class RedmineDeployConfig(dict):
+    @property
+    def project(self):
+        return self['project']
+
+    @property
+    def version(self):
+        if 'version' in self:
+            return self['version']
+
+    @property
+    def append_buildnumber(self):
+        if 'append_buildnumber' in self:
+            return self['append_buildnumber']
+        return False
 
 class Action(dict):
     @property
@@ -50,15 +65,6 @@ class Action(dict):
     @property
     def command_keys(self):
         return [key for key in self.keys() if key != 'name']
-
-    @property
-    def redmine_upload(self):
-        if 'redmine_upload' not in self:
-            print("redmine_upload is None")
-            return None
-        
-        print("redmine_upload is None", self['redmine_upload'])
-        return self['redmine_upload']
 
     def commands_for_key(self, key):
         commands = self.get(key)
@@ -79,15 +85,19 @@ class Action(dict):
             return commands_dict.get('products_command')
         return None
 
+    def redmine_deploy_for_key(self, key):
+        commands_dict = self.get(key)
+        if isinstance(commands_dict, dict) and 'redmine_deploy' in commands_dict:
+            return RedmineDeployConfig(commands_dict.get('redmine_deploy'))
 
 
 class ProfileCommand:
-    def __init__(self, name, commands, products=None, products_command=None, redmine_upload=None):
+    def __init__(self, name, commands, products=None, products_command=None, redmine_deploy=None):
         self.name = name
         self.commands = commands
         self.products = products
         self.products_command = products_command
-        self.redmine_upload = redmine_upload
+        self.redmine_deploy = redmine_deploy
 
 
 class InplaceConfig:
@@ -110,7 +120,7 @@ class InplaceConfig:
                                        commands=action.commands_for_key(profile.command_key),
                                        products=action.products_for_key(profile.command_key),
                                        products_command=action.products_command_for_key(profile.command_key),
-                                       redmine_upload=action.redmine_upload)
+                                       redmine_deploy=action.redmine_deploy_for_key(profile.command_key))
                         for action in self.actions]
         return [cmd for cmd in all_commands if cmd.commands]
 

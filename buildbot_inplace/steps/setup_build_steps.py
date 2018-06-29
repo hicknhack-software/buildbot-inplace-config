@@ -64,7 +64,11 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
             masterdest = 'products/' + self.build.properties['inplace_project']
             project = self.global_config.projects.named_get(self.build.properties['inplace_project'])
 
-            if pc.products and pc.redmine_upload:
+            redmine = pc.redmine_deploy
+
+            print "Got Redmine: ", redmine
+
+            if pc.products and redmine:
                 self._add_step(MultipleFileUpload(name='Upload products \'' + ', '.join(flatten([pc.products])) + '\'',
                                                   workersrcs=pc.products,
                                                   masterdest=masterdest))
@@ -73,10 +77,10 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                     project=project,
                     products=pc.products,
                     product_dir=masterdest,
-                    redmine_identifier=pc.redmine_upload
+                    deploy_config=redmine
                 ))
 
-            if pc.products_command and pc.redmine_upload:
+            if pc.products_command and redmine:
                 self._add_step(SetPropertyFromCommand(name='Set property from command \'' + pc.products_command + '\'',
                                                       command=pc.products_command,
                                                       extract_fn=glob2list))
@@ -87,7 +91,7 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                     project=project,
                     products=Property('product_files'),
                     product_dir=masterdest,
-                    redmine_identifier=pc.redmine_upload,
+                    deploy_config=redmine,
                 ))
 
         defer.returnValue(SUCCESS)
