@@ -109,9 +109,9 @@ class RedmineUpload(BuildStep):
 		responseBody = yield readBody(response)
 		for version in json.loads(responseBody)["versions"]:
 			if version["name"] == version_name:
-				defer.returnValue(version.id)
+				defer.returnValue(version["id"])
 				return
-		
+
 		defer.returnValue(None)
 
 	@defer.inlineCallbacks
@@ -120,7 +120,7 @@ class RedmineUpload(BuildStep):
 			'Content-Type': ['application/json'],
 			'authorization' : self.auth_header,
 		})
-		
+
 		agent = Agent(reactor)
 
 		url = self.redmine_url + "/projects/" + self.deploy_config.project + "/files.json"
@@ -138,7 +138,7 @@ class RedmineUpload(BuildStep):
 			'Content-Type': ['application/json'],
 			'authorization' : self.auth_header,
 		})
-		
+
 		agent = Agent(reactor)
 
 		version_id = yield self._get_version_id()
@@ -164,7 +164,7 @@ class RedmineUpload(BuildStep):
 		log.addContent("Uploading files to Redmine instance at %s\n" % self.redmine_url)
 
 		skipped = True
-		
+
 		for product in self.products:
 			try:
 				filename = os.path.basename(product)
@@ -180,7 +180,7 @@ class RedmineUpload(BuildStep):
 					if not available:
 						log.addContent("File \"%s\" already exists, skipping...\n" % filename)
 						continue
-					
+
 					skipped = False
 
 					log.addContent("Uploading File %s\n" % filename)
