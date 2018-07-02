@@ -157,7 +157,8 @@ class Wrapper(dict):
             branches=[project.repo_branch],
             pollAtLaunch=True,
             project=project.name,
-            workdir=workdir
+            workdir=workdir,
+            pollInterval=60,
         ))
 
         # Manually add and configure git credential store
