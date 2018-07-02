@@ -66,6 +66,15 @@ class Project(dict):
         return self['repoPassword']
 
     @property
+    def repo_mode(self):
+        if 'repoMode' not in self:
+            return 'incremental'
+
+	if self['repoMode'] not in ['incremental', 'full']:
+		raise Exception("Invalid repoMode in project configuration")
+        return self['repoMode']
+
+    @property
     def repo_credentials(self):
         if 'repoCredentials' not in self:
             return []

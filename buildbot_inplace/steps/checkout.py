@@ -37,7 +37,7 @@ def create_checkout_step(project=None, only_config=False):
     if repo_type == "git":
         return Git(repourl=set_url_auth(repo_url=project.repo_url, user=project.repo_user, password=project.repo_password),
                    branch=project.repo_branch,
-                   mode='full',
+                   mode=project.repo_mode,
                    submodules=not only_config,
                    shallow=only_config,
                    name=description,
@@ -46,7 +46,7 @@ def create_checkout_step(project=None, only_config=False):
                    hideStepIf=ShowStepIfSuccessful)
     elif repo_type == "svn":
         return SVN(repourl=project.repo_url,
-                   mode='full',
+                   mode=project.repo_mode,
                    username=project.repo_user,
                    password=project.repo_password,
                    name=description,
