@@ -161,6 +161,12 @@ class RedmineUpload(BuildStep):
 	@defer.inlineCallbacks
 	def run(self):
 		log = yield self.addLog('redmine_upload', 't')
+
+		if not self.redmine_url or self.redmine_url == "":
+			log.addContent("Redmine URL empty, skipping...")
+			defer.returnValue(SKIPPED)
+			return
+
 		log.addContent("Uploading files to Redmine instance at %s\n" % self.redmine_url)
 
 		skipped = True
