@@ -66,8 +66,6 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
 
             redmine = pc.redmine_deploy
 
-            print "Got Redmine: ", redmine
-
             if pc.products and redmine:
                 self._add_step(MultipleFileUpload(name='Upload products \'' + ', '.join(flatten([pc.products])) + '\'',
                                                   workersrcs=pc.products,
@@ -83,7 +81,8 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
             if pc.products_command and redmine:
                 self._add_step(SetPropertyFromCommand(name='Set property from command \'' + pc.products_command + '\'',
                                                       command=pc.products_command,
-                                                      extract_fn=glob2list))
+                                                      extract_fn=glob2list,
+                                                      haltOnFailure=True))
                 self._add_step(MultipleFileUpload(name='Upload products from command \'' + pc.products_command + '\'',
                                                   workersrcs=Property('product_files'),
                                                   masterdest=masterdest))

@@ -167,6 +167,11 @@ class RedmineUpload(BuildStep):
 			defer.returnValue(SKIPPED)
 			return
 
+		if not self.products:
+			log.addContent("No products to upload.")
+			defer.returnValue(SKIPPED)
+			return
+
 		log.addContent("Uploading files to Redmine instance at %s\n" % self.redmine_url)
 
 		skipped = True
