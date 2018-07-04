@@ -34,7 +34,8 @@ from twisted.web.client import readBody
 from twisted.web.http_headers import Headers
 
 import json
-import os.path
+import posixpath
+import ntpath
 import errno
 from base64 import b64encode
 
@@ -178,14 +179,16 @@ class RedmineUpload(BuildStep):
 
 		for product in self.products:
 			try:
-				filename = os.path.basename(product)
+				filename = posixpath.basename(product)
 				local_filename = filename
+				filename = ntpath.basename(product)
+
 				if self.deploy_config.append_buildnumber:
 					buildnumber = self.getProperty('buildnumber')
-					base, ext = os.path.splitext(filename)
+					base, ext = posixpath.splitext(filename)
 					filename = "%s-%s%s" % (base, buildnumber, ext)
 
-				with open(os.path.join(self.product_dir, local_filename), "rb") as f:
+				with open(posixpath.join(self.product_dir, local_filename), "rb") as f:
 					log.addContent("Checking for filename \"%s\" on server...\n" % filename)
 					available = yield self._check_filename_available(filename)
 					if not available:
