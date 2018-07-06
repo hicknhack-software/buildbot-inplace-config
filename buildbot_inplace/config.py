@@ -19,11 +19,9 @@ limitations under the License.
 import random
 
 from buildbot.config import BuilderConfig
-from buildbot.schedulers.forcesched import ForceScheduler
-from buildbot.schedulers.triggerable import Triggerable
-from buildbot.schedulers.basic import SingleBranchScheduler
 from buildbot.changes.filter import ChangeFilter
 from buildbot.plugins import changes
+from buildbot.plugins import schedulers
 from buildbot.www.auth import UserPasswordAuth
 from buildbot.www.authz.authz import Authz
 from buildbot.www.authz.roles import RolesFromUsername
@@ -182,7 +180,7 @@ class Wrapper(dict):
         open(git_cred_path, "w").writelines(credlines)
 
         # Register a scheduler that reacts to changes on the repository
-        git_scheduler = SingleBranchScheduler(
+        git_scheduler = schedulers.SingleBranchScheduler(
             name="Git-%s" % project.name,
             builderNames=[project.name],
             change_filter=ChangeFilter(branch=project.repo_branch))
@@ -217,14 +215,14 @@ class Wrapper(dict):
             builder_factory = SpawnerBuildFactory(self, trigger_name, project)
             builder_config = BuilderConfig(name=spawner_name, workernames=worker_names, factory=builder_factory)
             self.builders.named_set(builder_config)
-            self.schedulers.named_set(ForceScheduler(name=force_trigger_name, builderNames=[spawner_name]))
+            self.schedulers.named_set(schedulers.ForceScheduler(name=force_trigger_name, builderNames=[spawner_name]))
 
             inplace_builder_config = BuilderConfig(
                 name=builder_name,
                 workernames=worker_names,
                 factory=SetupBuildFactory(self, project),
                 nextWorker=pick_next_worker)
-            inplace_scheduler = Triggerable(
+            inplace_scheduler = schedulers.Triggerable(
                 name=trigger_name,
                 builderNames=[builder_name])
 
@@ -240,3 +238,10 @@ class Wrapper(dict):
                 self.setup_git_poller(project)
             else:
                 raise "SVN Repository Polling not implemented!"
+
+            nightly_scheduler = schedulers.Nightly(
+                name="Nightly-%s" % project.name,
+                builderNames=[project.name],
+                hour=0
+            )
+            #self.schedulers.named_set(nightly_scheduler)
