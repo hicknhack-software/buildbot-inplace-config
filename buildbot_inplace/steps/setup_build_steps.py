@@ -27,6 +27,7 @@ from twisted.internet import defer
 from .configured_step_mixin import ConfiguredStepMixin
 from .setup import SetupStep
 from .redmine_upload import RedmineUpload
+from .github_upload import GithubUpload
 
 
 def glob2list(rc, stdout, stderr):
@@ -65,20 +66,30 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
             project = self.global_config.projects.named_get(self.build.properties['inplace_project'])
 
             redmine = pc.redmine_deploy
+            github = pc.github_deploy
 
-            if pc.products and redmine:
+            if pc.products and (redmine or github):
                 self._add_step(MultipleFileUpload(name='Upload products \'' + ', '.join(flatten([pc.products])) + '\'',
                                                   workersrcs=pc.products,
                                                   masterdest=masterdest))
 
-                self._add_step(RedmineUpload(name='Upload products to Redmine',
-                    project=project,
-                    products=pc.products,
-                    product_dir=masterdest,
-                    deploy_config=redmine
-                ))
+                if redmine:
+                    self._add_step(RedmineUpload(name='Upload products to Redmine',
+                        project=project,
+                        products=pc.products,
+                        product_dir=masterdest,
+                        deploy_config=redmine
+                    ))
 
-            if pc.products_command and redmine:
+                if github:
+                    self._add_step(GithubUpload(name='Upload products to Github',
+                        project=project,
+                        products=pc.products,
+                        product_dir=masterdest,
+                        deploy_config=github
+                    ))
+
+            if pc.products_command and (redmine or github):
                 self._add_step(SetPropertyFromCommand(name='Set property from command \'' + pc.products_command + '\'',
                                                       command=pc.products_command,
                                                       extract_fn=glob2list,
@@ -86,12 +97,22 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                 self._add_step(MultipleFileUpload(name='Upload products from command \'' + pc.products_command + '\'',
                                                   workersrcs=Property('product_files'),
                                                   masterdest=masterdest))
-                self._add_step(RedmineUpload(name='Upload products to Redmine',
-                    project=project,
-                    products=Property('product_files'),
-                    product_dir=masterdest,
-                    deploy_config=redmine,
-                ))
+
+                if redmine:
+                    self._add_step(RedmineUpload(name='Upload products to Redmine',
+                        project=project,
+                        products=Property('product_files'),
+                        product_dir=masterdest,
+                        deploy_config=redmine,
+                    ))
+
+                if github:
+                    self._add_step(GithubUpload(name='Upload products to Github',
+                        project=project,
+                        products=Property('product_files'),
+                        product_dir=masterdest,
+                        deploy_config=github,
+                    ))
 
         defer.returnValue(SUCCESS)
 

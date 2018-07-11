@@ -94,6 +94,13 @@ class Project(dict):
         return self['redminePassword']
 
     @property
+    def github_token(self):
+        if 'githubToken' in self:
+            return self['githubToken']
+        else:
+            return ''
+
+    @property
     def inplace(self):
         return self.get('inplace')
 

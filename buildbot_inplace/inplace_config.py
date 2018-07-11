@@ -89,15 +89,21 @@ class Action(dict):
         commands_dict = self.get(key)
         if isinstance(commands_dict, dict) and 'redmine_deploy' in commands_dict:
             return RedmineDeployConfig(commands_dict.get('redmine_deploy'))
+            
+    def github_deploy_for_key(self, key):
+        commands_dict = self.get(key)
+        if isinstance(commands_dict, dict) and 'github_deploy' in commands_dict:
+            return commands_dict.get('github_deploy')
 
 
 class ProfileCommand:
-    def __init__(self, name, commands, products=None, products_command=None, redmine_deploy=None):
+    def __init__(self, name, commands, products=None, products_command=None, redmine_deploy=None, github_deploy=None):
         self.name = name
         self.commands = commands
         self.products = products
         self.products_command = products_command
         self.redmine_deploy = redmine_deploy
+        self.github_deploy = github_deploy
 
 
 class InplaceConfig:
@@ -120,7 +126,8 @@ class InplaceConfig:
                                        commands=action.commands_for_key(profile.command_key),
                                        products=action.products_for_key(profile.command_key),
                                        products_command=action.products_command_for_key(profile.command_key),
-                                       redmine_deploy=action.redmine_deploy_for_key(profile.command_key))
+                                       redmine_deploy=action.redmine_deploy_for_key(profile.command_key),
+                                       github_deploy=action.github_deploy_for_key(profile.command_key))
                         for action in self.actions]
         return [cmd for cmd in all_commands if cmd.commands]
 
