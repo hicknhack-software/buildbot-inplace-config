@@ -18,9 +18,6 @@ limitations under the License.
 """
 
 from buildbot.process.buildstep import BuildStep, SUCCESS, SKIPPED
-from buildbot.steps.shell import ShellCommand, SetPropertyFromCommand
-from buildbot.util import flatten
-from buildbot import config
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -198,11 +195,11 @@ class RedmineUpload(BuildStep):
 					skipped = False
 
 					log.addContent("Uploading File %s\n" % filename)
-					token  = yield self._upload_file(f)
+					token = yield self._upload_file(f)
 					log.addContent("Uploaded File %s, spawned token %s\n" % (filename, token))
 
 					yield self._upload_token(filename, token)
-			except IOError, e:
+			except IOError as e:
 				if e.errno == errno.EISDIR:
 					log.addContent("Skipping directory %s\n" % product)
 				else:

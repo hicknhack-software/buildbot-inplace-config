@@ -20,8 +20,7 @@ from buildbot.process.buildstep import BuildStepFailed
 from buildbot.steps.worker import CompositeStepMixin
 from twisted.internet import defer
 
-from buildbot_inplace.inplace_config import InplaceConfig, BuildbotYmlInvalid
-
+from inplace.buildbot_inplace.inplace_config import InplaceConfig, BuildbotYmlInvalid
 
 class ConfiguredStepMixin(CompositeStepMixin):
     def __init__(self):

@@ -16,7 +16,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from urlparse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 from buildbot.steps.source.git import Git
 from buildbot.steps.source.svn import SVN
 from .success import ShowStepIfSuccessful

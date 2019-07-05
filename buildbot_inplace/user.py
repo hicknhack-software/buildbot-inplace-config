@@ -29,14 +29,20 @@ class User(dict):
 
     @property
     def name(self):
+        if 'name' not in self:
+            raise Exception("User requires at least a username")
         return self['name']
 
     @property
     def password(self):
+        if 'password' not in self:
+            return ''
         return self['password']
 
     @property
     def capabilities(self):
+        if 'capabilities' not in self:
+            return []
         return self['capabilities']
 
     @staticmethod
