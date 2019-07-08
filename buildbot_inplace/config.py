@@ -59,7 +59,7 @@ class NamedList(list):
 
     @property
     def names(self):
-        return map(lambda elem: elem.name, self)
+        return list(map(lambda elem: elem.name, self))
 
 
 class Wrapper(dict):
