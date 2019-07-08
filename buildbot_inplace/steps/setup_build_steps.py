@@ -74,7 +74,8 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                                                   masterdest=masterdest))
 
                 if redmine:
-                    self._add_step(RedmineUpload(name='Upload products to Redmine',
+                    self._add_step(RedmineUpload(
+                        name='Upload products to Redmine',
                         project=project,
                         products=pc.products,
                         product_dir=masterdest,
@@ -82,7 +83,8 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                     ))
 
                 if github:
-                    self._add_step(GithubUpload(name='Upload products to Github',
+                    self._add_step(GithubUpload(
+                        name='Upload products to Github',
                         project=project,
                         products=pc.products,
                         product_dir=masterdest,
@@ -90,16 +92,19 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                     ))
 
             if pc.products_command and (redmine or github):
-                self._add_step(SetPropertyFromCommand(name='Set property from command \'' + pc.products_command + '\'',
-                                                      command=pc.products_command,
-                                                      extract_fn=glob2list,
-                                                      haltOnFailure=True))
-                self._add_step(MultipleFileUpload(name='Upload products from command \'' + pc.products_command + '\'',
-                                                  workersrcs=Property('product_files'),
-                                                  masterdest=masterdest))
+                self._add_step(SetPropertyFromCommand(
+                    name='Set property from command \'' + pc.products_command + '\'',
+                    command=pc.products_command,
+                    extract_fn=glob2list,
+                    haltOnFailure=True))
+                self._add_step(MultipleFileUpload(
+                    name='Upload products from command \'' + pc.products_command + '\'',
+                    workersrcs=Property('product_files'),
+                    masterdest=masterdest))
 
                 if redmine:
-                    self._add_step(RedmineUpload(name='Upload products to Redmine',
+                    self._add_step(RedmineUpload(
+                        name='Upload products to Redmine',
                         project=project,
                         products=Property('product_files'),
                         product_dir=masterdest,
@@ -107,7 +112,8 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
                     ))
 
                 if github:
-                    self._add_step(GithubUpload(name='Upload products to Github',
+                    self._add_step(GithubUpload(
+                        name='Upload products to Github',
                         project=project,
                         products=Property('product_files'),
                         product_dir=masterdest,
