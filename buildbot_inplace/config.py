@@ -239,9 +239,9 @@ class Wrapper(dict):
             else:
                 raise "SVN Repository Polling not implemented!"
 
-            nightly_scheduler = schedulers.Nightly(
-                name="Nightly-%s" % project.name,
-                builderNames=[project.name],
-                hour=0
-            )
+            #nightly_scheduler = schedulers.Nightly(
+            #    name="Nightly-%s" % project.name,
+            #    builderNames=[project.name],
+            #    hour=0
+            #)
             #self.schedulers.named_set(nightly_scheduler)
