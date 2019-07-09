@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2018 HicknHack Software GmbH
+(C) Copyright 2015-2019 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
