@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2017 HicknHack Software GmbH
+(C) Copyright 2015-2019 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -33,6 +33,7 @@ class RepoCredential(dict):
     @property
     def password(self):
         return self['password']
+
 
 class Project(dict):
     @property
@@ -70,8 +71,8 @@ class Project(dict):
         if 'repoMode' not in self:
             return 'incremental'
 
-	if self['repoMode'] not in ['incremental', 'full']:
-		raise Exception("Invalid repoMode in project configuration")
+        if self['repoMode'] not in ['incremental', 'full']:
+            raise Exception("Invalid repoMode in project configuration")
         return self['repoMode']
 
     @property

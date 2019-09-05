@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2017 HicknHack Software GmbH
+(C) Copyright 2015-2019 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -59,7 +59,7 @@ class NamedList(list):
 
     @property
     def names(self):
-        return map(lambda elem: elem.name, self)
+        return list(map(lambda elem: elem.name, self))
 
 
 class Wrapper(dict):
@@ -149,13 +149,13 @@ class Wrapper(dict):
         self['www']['authz'] = Authz(allowRules=allow_rules, roleMatchers=role_matcher)
 
     def setup_git_poller(self, project):
-        workdir = './gitpoller-workdir/' + project.name
+        work_dir = './gitpoller-workdir/' + project.name
         self.change_source.append(changes.GitPoller(
             repourl=project.repo_url,
             branches=[project.repo_branch],
             pollAtLaunch=True,
             project=project.name,
-            workdir=workdir,
+            workdir=work_dir,
             pollInterval=60,
         ))
 
@@ -164,20 +164,20 @@ class Wrapper(dict):
         from os.path import expanduser
 
         git_cred_path = expanduser("~/.git-credentials")
-        Popen(["git", "init", "--bare", workdir])
+        Popen(["git", "init", "--bare", work_dir])
         try:
-            credlines = set(open(git_cred_path).readlines())
+            cred_lines = set(open(git_cred_path).readlines())
         except IOError:
-            credlines = set()
+            cred_lines = set()
 
         # Prepare the GitPoller workdir with credentials
         for cred in project.repo_credentials:
-            Popen(["git", "config", "--global", "credential.helper", "store"], cwd=workdir)
+            Popen(["git", "config", "--global", "credential.helper", "store"], cwd=work_dir)
 
             scheme, uri = cred.url.split("//")
-            credlines.add(scheme + "//" + cred.user + ":" + cred.password + "@" + uri + '\n')
+            cred_lines.add(scheme + "//" + cred.user + ":" + cred.password + "@" + uri + '\n')
 
-        open(git_cred_path, "w").writelines(credlines)
+        open(git_cred_path, "w").writelines(cred_lines)
 
         # Register a scheduler that reacts to changes on the repository
         git_scheduler = schedulers.SingleBranchScheduler(
@@ -237,11 +237,11 @@ class Wrapper(dict):
             if project.repo_type == 'git':
                 self.setup_git_poller(project)
             else:
-                raise "SVN Repository Polling not implemented!"
+                raise Exception('SVN Repository Polling not implemented!')
 
-            nightly_scheduler = schedulers.Nightly(
-                name="Nightly-%s" % project.name,
-                builderNames=[project.name],
-                hour=0
-            )
+            #nightly_scheduler = schedulers.Nightly(
+            #    name="Nightly-%s" % project.name,
+            #    builderNames=[project.name],
+            #    hour=0
+            #)
             #self.schedulers.named_set(nightly_scheduler)

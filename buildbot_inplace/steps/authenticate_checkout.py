@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2017 HicknHack Software GmbH
+(C) Copyright 2015-2019 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -16,14 +16,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from ..project import RepoCredential
+
 from buildbot.steps.shellsequence import ShellSequence, ShellArg
-from configured_step_mixin import ConfiguredStepMixin
-from checkout import set_url_auth
-from ..utilities.command_utilities import get_worker_commands
+from . import configured_step_mixin
+from . import checkout
+from ..project import RepoCredential
+from ..utilities import command_utilities
 
 
-class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
+class AuthenticateCheckoutStep(ShellSequence, configured_step_mixin.ConfiguredStepMixin):
     """A Step to store authentication on source checkouts."""
     def __init__(self, project=None, config=None, **kwargs):
         self.project = project
@@ -37,7 +38,7 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
     def run(self):
         repo_credentials = self.project.repo_credentials
         worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
-        worker_commands = get_worker_commands(worker_info=worker)
+        worker_commands = command_utilities.get_worker_commands(worker_info=worker)
         if not repo_credentials:
             self.commands.append(ShellArg(command=worker_commands.echo_command))
 
@@ -52,8 +53,8 @@ class AuthenticateCheckoutStep(ShellSequence, ConfiguredStepMixin):
                 if not repo_credential.url and not repo_credential.user and not repo_credential.password:
                     continue
 
-                auth_url = set_url_auth(repo_url=repo_credential.url, user=repo_credential.user,
-                                        password=repo_credential.password)
+                auth_url = checkout.set_url_auth(repo_url=repo_credential.url, user=repo_credential.user,
+                                                 password=repo_credential.password)
 
                 set_git_auth_script = worker_commands.create_path_to([worker.utilities_dir, 'add_git_credentials.py'])
                 add_auth_command = ' '.join([worker_commands.python_command, set_git_auth_script, auth_url])
@@ -76,7 +77,7 @@ class ClearCheckoutAuthenticationStep(ShellSequence):
 
     def run(self):
         worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
-        worker_commands = get_worker_commands(worker_info=worker)
+        worker_commands = command_utilities.get_worker_commands(worker_info=worker)
 
         credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
         remove_command = ' '.join([worker_commands.remove_command, credential_file])

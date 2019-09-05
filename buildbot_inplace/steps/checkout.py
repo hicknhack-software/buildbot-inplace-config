@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2017 HicknHack Software GmbH
+(C) Copyright 2015-2019 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -16,7 +16,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from urlparse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 from buildbot.steps.source.git import Git
 from buildbot.steps.source.svn import SVN
 from .success import ShowStepIfSuccessful

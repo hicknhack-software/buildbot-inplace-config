@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2017 HicknHack Software GmbH
+(C) Copyright 2015-2019 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -29,14 +29,20 @@ class User(dict):
 
     @property
     def name(self):
+        if 'name' not in self:
+            raise Exception("User requires at least a username")
         return self['name']
 
     @property
     def password(self):
+        if 'password' not in self:
+            return ''
         return self['password']
 
     @property
     def capabilities(self):
+        if 'capabilities' not in self:
+            return []
         return self['capabilities']
 
     @staticmethod
