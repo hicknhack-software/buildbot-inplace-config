@@ -152,7 +152,7 @@ class Wrapper(dict):
         work_dir = './gitpoller-workdir/' + project.name
         self.change_source.append(changes.GitPoller(
             repourl=project.repo_url,
-            branches=[project.repo_branch],
+            branches=True,
             pollAtLaunch=True,
             project=project.name,
             workdir=work_dir,
@@ -180,10 +180,10 @@ class Wrapper(dict):
         open(git_cred_path, "w").writelines(cred_lines)
 
         # Register a scheduler that reacts to changes on the repository
-        git_scheduler = schedulers.SingleBranchScheduler(
+        git_scheduler = schedulers.AnyBranchScheduler(
             name="Git-%s" % project.name,
             builderNames=[project.name],
-            change_filter=ChangeFilter(branch=project.repo_branch))
+            change_filter=ChangeFilter(project=project.name))
 
         self.schedulers.named_set(git_scheduler)
 
