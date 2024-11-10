@@ -31,5 +31,5 @@ class SetupBuildFactory(BuildFactory):
             self.addStep(AuthenticateCheckoutStep(project=project, config=config))
         self.addStep(create_checkout_step(project=project))
         if project.repo_type == "git":
-            self.addStep(ClearCheckoutAuthenticationStep(config=config))
+            self.addStep(ClearCheckoutAuthenticationStep(project=project, config=config))
         self.addStep(SetupBuildSteps(config=config))

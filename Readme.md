@@ -6,7 +6,7 @@ This project tries to simplify the Buildbot master.cfg and enables each project 
 
 ## Usage
 
-This plugin requires Buildbot 0.9.x
+This plugin requires Buildbot 4.1.x
 Download the files from this repository to your Buildbot master.
 
 Example master.cfg
@@ -101,7 +101,7 @@ actions:
   	commands: 'make'
   	products: 'product.tar.gz'
   mscv:
-  	commands: 'nmake.exe' 
+  	commands: 'nmake.exe'
   	products:
   		- 'productA.zip'
   		- 'productB.zip'

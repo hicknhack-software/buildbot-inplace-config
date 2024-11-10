@@ -56,7 +56,7 @@ class InplaceTriggerBuilds(Trigger, ConfiguredStepMixin):
         for profile in self.build_config.profiles:
             if not self.global_config.project_profile_worker_names(profile):
                 if not log:
-                    log = yield self.addLog_newStyle("skipped builds", "t")
+                    log = yield self.addLog("skipped builds", "t")
                 yield log.addContent("Could not find worker for: {0} on platform {1}\n".format(profile.setups, profile.platform))
                 continue
 
@@ -74,10 +74,6 @@ class InplaceTriggerBuilds(Trigger, ConfiguredStepMixin):
 
         defer.returnValue(triggered_schedulers)
 
-    def start(self):
-        raise NotImplementedError("Use run()")
-
-
 class SpawnerBuildFactory(BuildFactory):
     """ A factory that provides Steps to checkout a repository, reads its configuration
         Finally it creates and triggers the builds accordingly."""
@@ -91,7 +87,7 @@ class SpawnerBuildFactory(BuildFactory):
             self.addStep(AuthenticateCheckoutStep(project=project, config=config))
         self.addStep(create_checkout_step(project=project, only_config=True))
         if project.repo_type == "git":
-            self.addStep(ClearCheckoutAuthenticationStep(config=config))
+            self.addStep(ClearCheckoutAuthenticationStep(project=project, config=config))
         self.addStep(InplaceTriggerBuilds(config=config, project=project, scheduler=scheduler,
                                           updateSourceStamp=True,
                                           waitForFinish=True,

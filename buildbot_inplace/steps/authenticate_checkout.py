@@ -61,13 +61,10 @@ class AuthenticateCheckoutStep(ShellSequence, configured_step_mixin.ConfiguredSt
                 self.commands.append(ShellArg(add_auth_command))
         return super(AuthenticateCheckoutStep, self).run()
 
-    def start(self):
-        raise NotImplementedError("Use run()")
-
-
 class ClearCheckoutAuthenticationStep(ShellSequence):
     """A Step to clean up any temporary authentication information for source checkouts."""
-    def __init__(self, config=None, **kwargs):
+    def __init__(self, project=None, config=None, **kwargs):
+        self.project = project
         self.global_config = config
         super(ClearCheckoutAuthenticationStep, self).__init__(name='Clear Authentication',
                                                               description='Clear Authentication',
@@ -78,13 +75,13 @@ class ClearCheckoutAuthenticationStep(ShellSequence):
     def run(self):
         worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
         worker_commands = command_utilities.get_worker_commands(worker_info=worker)
+        if not self.project.repo_credentials:
+            self.commands.append(ShellArg(command=worker_commands.echo_command))
 
-        credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
-        remove_command = ' '.join([worker_commands.remove_command, credential_file])
+        else:
+            credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
+            remove_command = ' '.join([worker_commands.remove_command, credential_file])
 
-        self.commands.extend([ShellArg(remove_command),
-                              ShellArg(['git', 'config', '--global', '--remove-section', 'credential'])])
+            self.commands.extend([ShellArg(remove_command),
+                                ShellArg(['git', 'config', '--global', '--remove-section', 'credential'])])
         return super(ClearCheckoutAuthenticationStep, self).run()
-
-    def start(self):
-        raise NotImplementedError("Use run()")

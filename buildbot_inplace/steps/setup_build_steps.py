@@ -16,7 +16,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from buildbot.process.buildstep import LoggingBuildStep, SUCCESS
+from buildbot.process.buildstep import BuildStep, ShellMixin, SUCCESS
 from buildbot.process.properties import Property
 from buildbot.steps.shell import ShellCommand, SetPropertyFromCommand
 from buildbot.steps.shellsequence import ShellSequence
@@ -36,7 +36,7 @@ def glob2list(rc, stdout, stderr):
     return {'product_files': product_files}
 
 
-class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
+class SetupBuildSteps(ShellMixin, BuildStep, ConfiguredStepMixin):
     """A Composite Step that dynamically adds profile steps to run profile setups and build command steps."""
 
     def __init__(self, config, *args, **kwargs):
@@ -122,11 +122,5 @@ class SetupBuildSteps(LoggingBuildStep, ConfiguredStepMixin):
 
         defer.returnValue(SUCCESS)
 
-    def start(self):
-        raise NotImplementedError("Use run()")
-
     def _add_step(self, step):
-        build = self.build
-        step.setBuild(build)
-        step.setWorker(build.workerforbuilder.worker)
-        build.steps.append(step)
+        self.build.addStepsAfterLastStep([step])
