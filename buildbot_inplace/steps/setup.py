@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2019 HicknHack Software GmbH
+(C) Copyright 2015-2025 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -53,6 +53,8 @@ class EnvironmentParser:
 class SetupStep(ShellMixin, BuildStep):
     """A Step that retrieves the environment after a command."""
 
+    name = "Setup step"
+
     def __init__(self, setup, config, env, **kwargs):
         self.setup = setup
         self.global_config = config
@@ -70,7 +72,7 @@ class SetupStep(ShellMixin, BuildStep):
         self.consumer = EnvironmentParser(self.env_dict, worker_commands.path_delimiter)
         self.addLogObserver('envLog', LineConsumerLogObserver(self.consumer.retrieve))
         yield self.runCommand(cmd)
-        yield defer.returnValue(cmd.results())
+        return cmd.results()
 
     def _command(self, worker_info):
         worker_commands = get_worker_commands(worker_info=worker_info)

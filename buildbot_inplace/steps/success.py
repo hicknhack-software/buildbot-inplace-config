@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2019 HicknHack Software GmbH
+(C) Copyright 2015-2025 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -19,4 +19,4 @@ limitations under the License.
 from buildbot.process.results import SUCCESS
 
 OVERRIDE_HIDE_IF = False
-ShowStepIfSuccessful = (lambda results, s: results is SUCCESS and not OVERRIDE_HIDE_IF)
+ShowStepIfSuccessful = (lambda results, *_: results is SUCCESS and not OVERRIDE_HIDE_IF)

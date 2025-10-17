@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2019 HicknHack Software GmbH
+(C) Copyright 2015-2025 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -39,9 +39,11 @@ def glob2list(rc, stdout, stderr):
 class SetupBuildSteps(ShellMixin, BuildStep, ConfiguredStepMixin):
     """A Composite Step that dynamically adds profile steps to run profile setups and build command steps."""
 
+    name = "Processing .buildbot.yml"
+
     def __init__(self, config, *args, **kwargs):
         self.global_config = config
-        super(SetupBuildSteps, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @defer.inlineCallbacks
     def run(self):
@@ -50,13 +52,13 @@ class SetupBuildSteps(ShellMixin, BuildStep, ConfiguredStepMixin):
         env = {}
 
         for setup in profile.setups:
-            desc = "Preparing %s" % setup
-            prepare_dict = dict(name=desc, description=desc, descriptionDone=desc)
+            desc = "Prepare %s" % setup
+            prepare_dict = dict(name=desc, description="preparing", descriptionDone="success")
             self._add_step(SetupStep(setup, config=self.global_config, env=env, **prepare_dict))
 
         profile_commands = inplace_config.profile_commands(profile)
         for pc in profile_commands:
-            shell_dict = dict(name=pc.name, description=pc.name, descriptionDone=pc.name)
+            shell_dict = dict(name=pc.name, description="running", descriptionDone="done")
             if len(pc.commands) == 1:
                 self._add_step(ShellCommand(command=pc.commands[0], env=env, haltOnFailure=True, **shell_dict))
             else:

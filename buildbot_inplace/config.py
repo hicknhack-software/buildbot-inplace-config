@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2019 HicknHack Software GmbH
+(C) Copyright 2015-2025 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -66,7 +66,7 @@ class Wrapper(dict):
     """ Wrapper for the configuration dictionary """
 
     def __init__(self, **kwargs):
-        super(Wrapper, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._inplace_workers = NamedList()
         self._projects = NamedList()
         self._users = NamedList()
@@ -179,11 +179,18 @@ class Wrapper(dict):
 
         open(git_cred_path, "w").writelines(cred_lines)
 
+        def fileIsImportant(change):
+            if "[skip ci]" in change.comments or "[ci skip]" in change.comments:
+                return False
+            return True
+
         # Register a scheduler that reacts to changes on the repository
         git_scheduler = schedulers.AnyBranchScheduler(
             name="Git-%s" % project.name,
             builderNames=[project.name],
-            change_filter=ChangeFilter(project=project.name))
+            change_filter=ChangeFilter(project=project.name),
+            fileIsImportant=fileIsImportant
+            )
 
         self.schedulers.named_set(git_scheduler)
 

@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2019 HicknHack Software GmbH
+(C) Copyright 2015-2025 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -35,12 +35,12 @@ class InplaceTriggerBuilds(Trigger, ConfiguredStepMixin):
         self.global_config = config
         self.project = project
         self.build_config = None
-        super(InplaceTriggerBuilds, self).__init__(schedulerNames=[scheduler], **kwargs)
+        super().__init__(schedulerNames=[scheduler], **kwargs)
 
     @defer.inlineCallbacks
     def run(self):
         self.build_config = yield self.get_inplace_config()
-        rv = yield super(InplaceTriggerBuilds, self).run()
+        rv = yield super().run()
         defer.returnValue(rv)
 
     def createTriggerProperties(self, props):
@@ -79,10 +79,10 @@ class SpawnerBuildFactory(BuildFactory):
         Finally it creates and triggers the builds accordingly."""
 
     TRIGGER_DESC = 'Triggering Builds'
-    TRIGGER_DICT = dict(name=TRIGGER_DESC, description=TRIGGER_DESC, descriptionDone=TRIGGER_DESC)
+    TRIGGER_DICT = dict(name=TRIGGER_DESC)
 
     def __init__(self, config, scheduler, project):
-        super(SpawnerBuildFactory, self).__init__()
+        super().__init__()
         if project.repo_type == "git":
             self.addStep(AuthenticateCheckoutStep(project=project, config=config))
         self.addStep(create_checkout_step(project=project, only_config=True))

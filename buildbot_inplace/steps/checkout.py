@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2019 HicknHack Software GmbH
+(C) Copyright 2015-2025 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -41,8 +41,6 @@ def create_checkout_step(project=None, only_config=False):
                    submodules=not only_config,
                    shallow=only_config,
                    name=description,
-                   description=description,
-                   descriptionDone=description,
                    hideStepIf=ShowStepIfSuccessful)
     elif repo_type == "svn":
         return SVN(repourl=project.repo_url,
@@ -50,8 +48,6 @@ def create_checkout_step(project=None, only_config=False):
                    username=project.repo_user,
                    password=project.repo_password,
                    name=description,
-                   description=description,
-                   descriptionDone=description,
                    hideStepIf=ShowStepIfSuccessful)
 
     else:

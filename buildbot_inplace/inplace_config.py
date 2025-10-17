@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2019 HicknHack Software GmbH
+(C) Copyright 2015-2025 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -89,7 +89,7 @@ class Action(dict):
         commands_dict = self.get(key)
         if isinstance(commands_dict, dict) and 'redmine_deploy' in commands_dict:
             return RedmineDeployConfig(commands_dict.get('redmine_deploy'))
-            
+
     def github_deploy_for_key(self, key):
         commands_dict = self.get(key)
         if isinstance(commands_dict, dict) and 'github_deploy' in commands_dict:

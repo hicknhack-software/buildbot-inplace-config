@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2019 HicknHack Software GmbH
+(C) Copyright 2015-2025 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -30,7 +30,7 @@ class ConfiguredStepMixin(CompositeStepMixin):
         if self.descriptionDone is not None:
             return {u'step': self.descriptionDone}
         else:
-            super(ConfiguredStepMixin, self).getResultSummary()
+            super().getResultSummary()
 
 
     @defer.inlineCallbacks

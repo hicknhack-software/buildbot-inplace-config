@@ -1,5 +1,5 @@
 """ Buildbot inplace config
-(C) Copyright 2015-2019 HicknHack Software GmbH
+(C) Copyright 2015-2025 HicknHack Software GmbH
 
 The original code can be found at:
 https://github.com/hicknhack-software/buildbot-inplace-config
@@ -17,71 +17,73 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from buildbot.steps.shellsequence import ShellSequence, ShellArg
+import stat
+from twisted.internet import defer
+
+from buildbot.process.results import SUCCESS, worst_status
+from buildbot.steps.shell import ShellCommand
 from . import configured_step_mixin
 from . import checkout
 from ..project import RepoCredential
 from ..utilities import command_utilities
+from .success import ShowStepIfSuccessful
 
+class AuthenticateCheckoutStep(ShellCommand, configured_step_mixin.ConfiguredStepMixin):
+    name = "Setup Git Authentication"
+    haltOnFailure = True
+    flunkOnFailure = True
 
-class AuthenticateCheckoutStep(ShellSequence, configured_step_mixin.ConfiguredStepMixin):
     """A Step to store authentication on source checkouts."""
     def __init__(self, project=None, config=None, **kwargs):
         self.project = project
         self.global_config = config
-        super(AuthenticateCheckoutStep, self).__init__(commands=[],
-                                                       name='Update Authentication',
-                                                       description='SECRET',
-                                                       descriptionDone='SECRET',
-                                                       **kwargs)
+        super().__init__(hideStepIf = ShowStepIfSuccessful, **kwargs)
 
+    @defer.inlineCallbacks
     def run(self):
         repo_credentials = self.project.repo_credentials
         worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
         worker_commands = command_utilities.get_worker_commands(worker_info=worker)
         if not repo_credentials:
-            self.commands.append(ShellArg(command=worker_commands.echo_command))
+            return SUCCESS
 
-        else:
-            credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
-            remove_command = ' '.join([worker_commands.remove_command, credential_file])
-            self.commands.extend([ShellArg(remove_command),
-                                  ShellArg(['git', 'config', '--global', 'credential.helper', 'store'])])
+        content =  []
+        for repo_credential in repo_credentials:
+            assert isinstance(repo_credential, RepoCredential)
+            if not repo_credential.url and not repo_credential.user and not repo_credential.password:
+                continue
 
-            for repo_credential in repo_credentials:
-                assert isinstance(repo_credential, RepoCredential)
-                if not repo_credential.url and not repo_credential.user and not repo_credential.password:
-                    continue
+            auth_url = checkout.set_url_auth(repo_url=repo_credential.url, user=repo_credential.user,
+                                                password=repo_credential.password)
+            content.append(auth_url)
 
-                auth_url = checkout.set_url_auth(repo_url=repo_credential.url, user=repo_credential.user,
-                                                 password=repo_credential.password)
+        credential_file = worker_commands.create_path_to([worker.utilities_dir, 'tmp.git-credentials'])
+        yield self.downloadFileContentToWorker(credential_file, "\n".join(content), mode=stat.S_IRUSR | stat.S_IWUSR)
 
-                set_git_auth_script = worker_commands.create_path_to([worker.utilities_dir, 'add_git_credentials.py'])
-                add_auth_command = ' '.join([worker_commands.python_command, set_git_auth_script, auth_url])
-                self.commands.append(ShellArg(add_auth_command))
-        return super(AuthenticateCheckoutStep, self).run()
+        self.command = ['git', 'config', '--global', 'credential.helper', 'store --file=%s' % credential_file]
+        result = yield super().run()
+        return result
 
-class ClearCheckoutAuthenticationStep(ShellSequence):
+class ClearCheckoutAuthenticationStep(ShellCommand, configured_step_mixin.ConfiguredStepMixin):
+    name = "Clear Git Authentication"
+    haltOnFailure = False
+    flunkOnFailure = False
+    command = ['git', 'config', '--global', '--remove-section', 'credential']
+
     """A Step to clean up any temporary authentication information for source checkouts."""
     def __init__(self, project=None, config=None, **kwargs):
         self.project = project
         self.global_config = config
-        super(ClearCheckoutAuthenticationStep, self).__init__(name='Clear Authentication',
-                                                              description='Clear Authentication',
-                                                              descriptionDone='Authentication data cleared!',
-                                                              commands=[],
-                                                              **kwargs)
+        super().__init__(hideStepIf = ShowStepIfSuccessful, **kwargs)
 
+    @defer.inlineCallbacks
     def run(self):
         worker = self.global_config.inplace_workers.named_get(self.getWorkerName())
         worker_commands = command_utilities.get_worker_commands(worker_info=worker)
         if not self.project.repo_credentials:
-            self.commands.append(ShellArg(command=worker_commands.echo_command))
+            return SUCCESS
 
-        else:
-            credential_file = worker_commands.create_path_to([worker_commands.home_path_var, '.git-credentials'])
-            remove_command = ' '.join([worker_commands.remove_command, credential_file])
-
-            self.commands.extend([ShellArg(remove_command),
-                                ShellArg(['git', 'config', '--global', '--remove-section', 'credential'])])
-        return super(ClearCheckoutAuthenticationStep, self).run()
+        credential_file = worker_commands.create_path_to([worker.utilities_dir, 'tmp.git-credentials'])
+        result = yield self.runRmFile(credential_file, abandonOnFailure=False)
+        other_result = yield super().run()
+        return worst_status(result, other_result)
