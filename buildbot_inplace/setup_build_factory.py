@@ -18,7 +18,6 @@ limitations under the License.
 """
 from buildbot.process.factory import BuildFactory
 from .steps.setup_build_steps import SetupBuildSteps
-from .steps.authenticate_checkout import AuthenticateCheckoutStep, ClearCheckoutAuthenticationStep
 from .steps.checkout import create_checkout_step
 
 
@@ -27,9 +26,5 @@ class SetupBuildFactory(BuildFactory):
 
     def __init__(self, config, project):
         BuildFactory.__init__(self, steps=[])
-        if project.repo_type == "git":
-            self.addStep(AuthenticateCheckoutStep(project=project, config=config))
         self.addStep(create_checkout_step(project=project))
-        if project.repo_type == "git":
-            self.addStep(ClearCheckoutAuthenticationStep(project=project, config=config))
         self.addStep(SetupBuildSteps(config=config))

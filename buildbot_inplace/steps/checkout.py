@@ -18,8 +18,10 @@ limitations under the License.
 """
 from urllib.parse import urlparse, urlunparse
 from buildbot.steps.source.git import Git
+from buildbot.util.git_credential import GitCredentialOptions
 from buildbot.steps.source.svn import SVN
 from .success import ShowStepIfSuccessful
+from ..project import RepoCredential
 
 
 def set_url_auth(repo_url, user, password):
@@ -35,20 +37,27 @@ def create_checkout_step(project=None, only_config=False):
 
     repo_type = project.repo_type
     if repo_type == "git":
+        repo_credentials = project.repo_credentials
+        credentials =  []
+        for repo_credential in repo_credentials:
+            assert isinstance(repo_credential, RepoCredential)
+            if not repo_credential.url and not repo_credential.user and not repo_credential.password:
+                continue
+            credentials.append(f"url={repo_credential.url}\nusername={repo_credential.user}\npassword={repo_credential.password}\n")
+
         return Git(repourl=set_url_auth(repo_url=project.repo_url, user=project.repo_user, password=project.repo_password),
                    branch=project.repo_branch,
                    mode=project.repo_mode,
                    submodules=not only_config,
                    shallow=only_config,
                    name=description,
-                   hideStepIf=ShowStepIfSuccessful)
+                   git_credentials = GitCredentialOptions(credentials = credentials) if len(credentials) > 0 else None)
     elif repo_type == "svn":
         return SVN(repourl=project.repo_url,
                    mode=project.repo_mode,
                    username=project.repo_user,
                    password=project.repo_password,
-                   name=description,
-                   hideStepIf=ShowStepIfSuccessful)
+                   name=description)
 
     else:
         raise Exception("Repository type '" + str(repo_type) + "' not supported.")
